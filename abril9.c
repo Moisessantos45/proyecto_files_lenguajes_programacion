@@ -10,7 +10,7 @@ typedef char cadena[50];
 typedef struct
 {
     cadena nombre;
-    float edad;
+    int edad;
     float promedio;
     cadena carrera;
 } TEstudiante;
@@ -24,11 +24,11 @@ typedef struct
 int menu1();
 int menu2();
 int switch1();
-int switch2(cadena nombre, FILE *archivo);
-int abrirFile(cadena nombre, FILE *archivo);
-void crearFile(cadena nombre, FILE *archivo);
+int switch2(cadena nombre, FILE **archivo);
+int abrirFile(cadena nombre, FILE **archivo);
+void crearFile(cadena nombre, FILE **archivo);
 void leerDatosFile(FILE *archivo);
-void agregarDatosFile(FILE *archivo);
+void agregarDatosFile(FILE **archivo);
 bool verifyNumber(void *number, int type);
 int lengthFile(FILE *archivo);
 
@@ -40,11 +40,11 @@ int main()
 int switch1()
 {
     cadena nombre;
-    FILE *archivo;
-    int opc;
+    FILE *archivo = NULL;
+    int opc = 0;
     do
     {
-        int opc = menu1();
+        opc = menu1();
         switch (opc)
         {
         case 1:
@@ -52,11 +52,11 @@ int switch1()
             puts("Recuerda que el nombre no puede tener mas de 50 caracteres, agrega la terminacion del documento .bin");
             printf("Ingresa el nombre del archivo que quieres abrir: ");
             scanf("%s", nombre);
-            if(abrirFile(nombre, archivo))
-                switch2(nombre, archivo);
+            if (abrirFile(nombre, &archivo))
+                switch2(nombre, &archivo);
             break;
         case 2:
-            crearFile(nombre, archivo);
+            crearFile(nombre, &archivo);
             break;
         case 3:
             puts("***** Saliendo del programa... *****");
@@ -70,24 +70,25 @@ int switch1()
     } while (opc != 3);
 }
 
-int switch2(cadena nombre, FILE *archivo)
+int switch2(cadena nombre, FILE **archivo)
 {
-    int opc;
+    int opc = 0;
     do
     {
         int opc = menu2();
         switch (opc)
         {
         case 1:
-            leerDatosFile(archivo);
+            leerDatosFile(*archivo);
+            menu2();
             break;
         case 2:
-            agregarDatosFile(archivo);
+            agregarDatosFile(*&archivo);
             menu2();
             break;
         case 3:
             puts("***** Volviendo al menú... *****");
-            fclose(archivo);
+            fclose(*archivo);
             return 0;
             break;
         default:
@@ -125,31 +126,60 @@ int menu2()
     return opc;
 }
 
-void agregarDatosFile(FILE *archivo)
+int abrirFile(cadena nombre, FILE **archivo)
+{
+    // checar existencia del archivo
+    *archivo = fopen(nombre, "rb+");
+    if (*archivo == NULL)
+    {
+        printf("***** Error al abrir el archivo *****\n");
+        return 0;
+    }
+    else
+    {
+        printf("***** Archivo correctamente abierto *****\n");
+        return 1;
+    }
+}
+
+void agregarDatosFile(FILE **archivo)
 {
     int cantidad;
-    printf("ingresa la cantidad de alumnos que deseas agregar: ");
+    printf("Ingrese la cantidad de alumnos que deseas agregar: ");
     scanf("%d", &cantidad);
-    TEstudiante *datos[cantidad];
+
+    TEstudiante **datos = malloc(cantidad * sizeof(TEstudiante *));
+    if (datos == NULL)
+    {
+        fprintf(stderr, "Error al reservar memoria\n");
+        exit(EXIT_FAILURE);
+    }
+
     int direccion;
-    printf("************************\n");
-    printf("Ingrese la direccion: ");
+    printf("Ingrese la dirección: ");
     scanf("%d", &direccion);
+
     while (!verifyNumber(&direccion, 1))
     {
-        printf("***** Ingresa una direccion positiva *****\n");
+        printf("Ingresa una dirección positiva\n");
         scanf("%d", &direccion);
     }
+
     for (int i = 0; i < cantidad; i++)
     {
         datos[i] = (TEstudiante *)malloc(sizeof(TEstudiante));
-        printf("************************\n");
+        if (datos[i] == NULL)
+        {
+            fprintf(stderr, "Error al reservar memoria\n");
+            exit(EXIT_FAILURE);
+        }
+
         printf("Ingresa el nombre del alumno: ");
         getchar();
         scanf("%[^\n]", datos[i]->nombre);
 
         printf("Ingresa la edad del alumno: ");
-        scanf("%f", &datos[i]->edad);
+        scanf("%d", &datos[i]->edad);
 
         printf("Ingresa el promedio del alumno: ");
         scanf("%f", &datos[i]->promedio);
@@ -158,66 +188,86 @@ void agregarDatosFile(FILE *archivo)
         getchar();
         scanf("%[^\n]", datos[i]->carrera);
     }
-    puts("\n");
-    printf("************************\n");
-    puts("****Agregado correctamente****");
-    printf("************************\n");
+
+    printf("\nAgregado correctamente\n");
     for (int i = 0; i < cantidad; i++)
     {
-        fseek(archivo, direccion, SEEK_SET);
-        fwrite(datos[i], sizeof(TEstudiante), 1, archivo);
+        printf("Nombre: %s\n", datos[i]->nombre);
+        printf("Edad: %d\n", datos[i]->edad);
+        printf("Promedio: %.2f\n", datos[i]->promedio);
+        printf("Carrera: %s\n", datos[i]->carrera);
     }
-    // libera memoria
+
+    printf("\n");
+
+    for (int i = 0; i < cantidad; i++)
+    {
+        fseek(*archivo, direccion, SEEK_SET);
+        fwrite(datos[i], sizeof(TEstudiante), 1, *archivo);
+    }
+
+    // Liberar memoria
     for (int i = 0; i < cantidad; i++)
     {
         free(datos[i]);
     }
+    free(datos);
 }
 
 int lengthFile(FILE *archivo)
 {
-    int length;
-    fseek(archivo, 0, SEEK_END);
-    length = ftell(archivo);
-    int size = length / sizeof(TEstudiante);
-    return size;
+    fseek(archivo, 0, SEEK_END);           // Se nueve el puntero al final del archivo
+    long int total_bytes = ftell(archivo); // Obtener la posición actual del puntero
+    rewind(archivo);                       // Volver al principio del archivo
+
+    int size_of_struct = sizeof(TEstudiante);
+    int students = total_bytes / size_of_struct;
+
+    return students;
 }
 
 void leerDatosFile(FILE *archivo)
 {
-
-    TEstudiante *datos[1];
     int direccion;
-    printf("************************\n");
     printf("Ingrese la direccion desde la que desea leer los datos: ");
     scanf("%d", &direccion);
     int dir = fseek(archivo, direccion, SEEK_SET);
-    int size = lengthFile(archivo);
+    int size = 0;
     switch (dir)
     {
     case 0:
-        fread(datos[0], sizeof(TEstudiante), 1, archivo);
-        printf("************************\n");
+        size = lengthFile(archivo);
+        TEstudiante **datos = malloc(size * sizeof(TEstudiante *));
+        if (datos == NULL)
+        {
+            fprintf(stderr, "Error al reservar memoria\n");
+            exit(EXIT_FAILURE);
+        }
+        printf("\n");
         for (int i = 0; i < size; i++)
         {
             datos[i] = (TEstudiante *)malloc(sizeof(TEstudiante));
+            if (datos[i] == NULL)
+            {
+                fprintf(stderr, "Error al reservar memoria\n");
+                exit(EXIT_FAILURE);
+            }
             fread(datos[i], sizeof(TEstudiante), 1, archivo);
-        }
-        for (int i = 0; i < size; i++)
-        {
             printf("Nombre: %s\n", datos[i]->nombre);
-            printf("Edad: %f\n", datos[i]->edad);
-            printf("Promedio: %f\n", datos[i]->promedio);
+            printf("Edad: %d\n", datos[i]->edad);
+            printf("Promedio: %.2f\n", datos[i]->promedio);
             printf("Carrera: %s\n", datos[i]->carrera);
+            printf("\n");
         }
-        // libera memoria
+        // Liberar memoria
         for (int i = 0; i < size; i++)
         {
             free(datos[i]);
         }
+        free(datos);
         break;
     default:
-        printf("***** Error al leer el archivo *****\n");
+        printf("Error al leer el archivo\n");
         break;
     }
 }
@@ -262,35 +312,19 @@ bool verifyNumber(void *number, int type)
     return isNegative;
 }
 
-int abrirFile(cadena nombre, FILE *archivo)
-{
-    // checar existencia del archivo
-    archivo = fopen(nombre, "rb+");
-    if (archivo == NULL)
-    {
-        printf("***** Error al abrir el archivo *****\n");
-        return 0;
-    }
-    else
-    {
-        printf("***** Archivo correctamente abierto *****\n");
-        return 1;
-    }
-}
-
-void crearFile(cadena nombre, FILE *archivo)
+void crearFile(cadena nombre, FILE **archivo)
 {
     printf("************************\n");
     puts("Recuerda que el nombre no puede tener mas de 50 caracteres, agrega la terminacion del documento .bin");
     printf("Ingrese el nombre del archivo: ");
     scanf("%s", nombre);
 
-    archivo = fopen(nombre, "a");
-    if (archivo == NULL)
+    *archivo = fopen(nombre, "a");
+    if (*archivo == NULL)
     {
         fprintf(stderr, "***** Error al crear el archivo. *****\n");
         exit(EXIT_FAILURE);
     }
     printf("***** Archivo creado exitosamente. *****\n");
-    fclose(archivo);
+    fclose(*archivo);
 }
