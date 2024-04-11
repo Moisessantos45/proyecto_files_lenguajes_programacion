@@ -24,9 +24,9 @@ typedef struct
 int menu1();
 int menu2();
 int switch1();
-int switch2(char nombre[], FILE *archivo);
-void abrirFile(char nombre[], FILE *archivo);
-void crearFile(char nombre[], FILE *archivo);
+int switch2(cadena nombre, FILE *archivo);
+int abrirFile(cadena nombre, FILE *archivo);
+void crearFile(cadena nombre, FILE *archivo);
 void leerDatosFile(FILE *archivo);
 void agregarDatosFile(FILE *archivo);
 bool verifyNumber(void *number, int type);
@@ -39,7 +39,7 @@ int main()
 
 int switch1()
 {
-    char nombre[50];
+    cadena nombre;
     FILE *archivo;
     int opc;
     do
@@ -48,10 +48,15 @@ int switch1()
         switch (opc)
         {
         case 1:
-            switch2(nombre, archivo);
+            printf("************************\n");
+            puts("Recuerda que el nombre no puede tener mas de 50 caracteres, agrega la terminacion del documento .bin");
+            printf("Ingresa el nombre del archivo que quieres abrir: ");
+            scanf("%s", nombre);
+            if(abrirFile(nombre, archivo))
+                switch2(nombre, archivo);
             break;
         case 2:
-            switch2(nombre, archivo);
+            crearFile(nombre, archivo);
             break;
         case 3:
             puts("***** Saliendo del programa... *****");
@@ -59,13 +64,13 @@ int switch1()
             return 0;
             break;
         default:
-            puts("Error");
+            puts("*****Error, elige una opción valida*****");
             break;
         }
     } while (opc != 3);
 }
 
-int switch2(char nombre[], FILE *archivo)
+int switch2(cadena nombre, FILE *archivo)
 {
     int opc;
     do
@@ -74,19 +79,19 @@ int switch2(char nombre[], FILE *archivo)
         switch (opc)
         {
         case 1:
-            abrirFile(nombre, archivo);
-            agregarDatosFile(archivo);
+            leerDatosFile(archivo);
             break;
         case 2:
-            crearFile(nombre, archivo);
+            agregarDatosFile(archivo);
             menu2();
             break;
         case 3:
             puts("***** Volviendo al menú... *****");
+            fclose(archivo);
             return 0;
             break;
         default:
-            puts("Error");
+            puts("*****Error, elige una opción valida*****");
             break;
         }
     } while (opc != 3);
@@ -113,7 +118,7 @@ int menu2()
     printf("************************\n");
     printf("*  1. Leer datos de un documento *\n");
     printf("*  2. Agregar datos a un documento*\n");
-    printf("*  3. Volver al menú anterior.*\n");
+    printf("*  3. Volver al menu anterior.*\n");
     printf("************************\n");
     printf("Elige una opcion: ");
     scanf("%d", &opc);
@@ -122,7 +127,6 @@ int menu2()
 
 void agregarDatosFile(FILE *archivo)
 {
-    // EDITAR PARA ALUMNOS
     int cantidad;
     printf("ingresa la cantidad de alumnos que deseas agregar: ");
     scanf("%d", &cantidad);
@@ -131,7 +135,7 @@ void agregarDatosFile(FILE *archivo)
     printf("************************\n");
     printf("Ingrese la direccion: ");
     scanf("%d", &direccion);
-    if (!verifyNumber(&direccion, 1))
+    while (!verifyNumber(&direccion, 1))
     {
         printf("***** Ingresa una direccion positiva *****\n");
         scanf("%d", &direccion);
@@ -141,7 +145,8 @@ void agregarDatosFile(FILE *archivo)
         datos[i] = (TEstudiante *)malloc(sizeof(TEstudiante));
         printf("************************\n");
         printf("Ingresa el nombre del alumno: ");
-        scanf("%s", datos[i]->nombre);
+        getchar();
+        scanf("%[^\n]", datos[i]->nombre);
 
         printf("Ingresa la edad del alumno: ");
         scanf("%f", &datos[i]->edad);
@@ -150,16 +155,19 @@ void agregarDatosFile(FILE *archivo)
         scanf("%f", &datos[i]->promedio);
 
         printf("Ingresa la carrera del alumno: ");
-        scanf("%s", datos[i]->carrera);
+        getchar();
+        scanf("%[^\n]", datos[i]->carrera);
     }
     puts("\n");
+    printf("************************\n");
+    puts("****Agregado correctamente****");
     printf("************************\n");
     for (int i = 0; i < cantidad; i++)
     {
         fseek(archivo, direccion, SEEK_SET);
         fwrite(datos[i], sizeof(TEstudiante), 1, archivo);
     }
-    // liberra memoria
+    // libera memoria
     for (int i = 0; i < cantidad; i++)
     {
         free(datos[i]);
@@ -177,13 +185,13 @@ int lengthFile(FILE *archivo)
 
 void leerDatosFile(FILE *archivo)
 {
-    char nombre[50];
+
     TEstudiante *datos[1];
     int direccion;
     printf("************************\n");
     printf("Ingrese la direccion desde la que desea leer los datos: ");
     scanf("%d", &direccion);
-    const dir = fseek(archivo, direccion, SEEK_SET);
+    int dir = fseek(archivo, direccion, SEEK_SET);
     int size = lengthFile(archivo);
     switch (dir)
     {
@@ -207,9 +215,6 @@ void leerDatosFile(FILE *archivo)
         {
             free(datos[i]);
         }
-        break;
-    case -1:
-        printf(" ***** Error al leer el archivo *****\n");
         break;
     default:
         printf("***** Error al leer el archivo *****\n");
@@ -257,44 +262,35 @@ bool verifyNumber(void *number, int type)
     return isNegative;
 }
 
-void abrirFile(char nombre[], FILE *archivo)
+int abrirFile(cadena nombre, FILE *archivo)
 {
-    printf("************************\n");
-    puts("Recuerda que el nombre no puede tener mas de 50 caracteres, agrega la terminacion del documento .bin");
-    printf("Ingresa el nombre del archivo que quieres abrir: ");
-    scanf("%s", nombre);
     // checar existencia del archivo
     archivo = fopen(nombre, "rb+");
     if (archivo == NULL)
     {
         printf("***** Error al abrir el archivo *****\n");
-        return;
+        return 0;
     }
     else
     {
         printf("***** Archivo correctamente abierto *****\n");
-        return;
+        return 1;
     }
 }
 
-void crearFile(char nombre[], FILE *archivo)
+void crearFile(cadena nombre, FILE *archivo)
 {
     printf("************************\n");
     puts("Recuerda que el nombre no puede tener mas de 50 caracteres, agrega la terminacion del documento .bin");
     printf("Ingrese el nombre del archivo: ");
     scanf("%s", nombre);
-    if (access(nombre, F_OK) != -1)
+
+    archivo = fopen(nombre, "a");
+    if (archivo == NULL)
     {
-        printf("****** El archivo ya existe. No se puede crear. *****\n");
+        fprintf(stderr, "***** Error al crear el archivo. *****\n");
+        exit(EXIT_FAILURE);
     }
-    else
-    {
-        archivo = fopen(nombre, "a");
-        if (archivo == NULL)
-        {
-            fprintf(stderr, "***** Error al crear el archivo. *****\n");
-            exit(EXIT_FAILURE);
-        }
-        printf("***** Archivo creado exitosamente. *****\n");
-    }
+    printf("***** Archivo creado exitosamente. *****\n");
+    fclose(archivo);
 }
