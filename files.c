@@ -18,7 +18,7 @@ typedef struct
     int direccion;
     int typeDato;
     Tvalor valor;
-} TDatos;
+} TEstudiante;
 
 #define TCHAR 1
 #define TINT 2
@@ -38,7 +38,7 @@ int main()
 
 void agregarDatosFile()
 {
-    TDatos datos;
+    TEstudiante datos;
     FILE *archivo = NULL;
     int tipo;
     archivo = fopen("datos.bin", "wb+");
@@ -78,12 +78,12 @@ void agregarDatosFile()
         break;
     }
     fseek(archivo, datos.direccion, SEEK_SET);
-    fwrite(&datos, sizeof(TDatos), 1, archivo);
+    fwrite(&datos, sizeof(TEstudiante), 1, archivo);
 }
 
 void leerDatosFile()
 {
-    TDatos datos;
+    TEstudiante datos;
     FILE *archivo = NULL;
     int direccion;
     archivo = fopen("datos.bin", "rb+");
@@ -95,7 +95,7 @@ void leerDatosFile()
     switch (fseek(archivo, direccion, SEEK_SET))
     {
     case 0:
-        fread(&datos, sizeof(TDatos), 1, archivo);
+        fread(&datos, sizeof(TEstudiante), 1, archivo);
         switch (datos.typeDato)
         {
         case TINT:

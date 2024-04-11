@@ -4,24 +4,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 typedef char cadena[50];
-
 typedef struct
 {
-    int entero;
-    float flotante;
-    double doble;
-    char string[51];
-    long eneteroGrande;
-} Tvalor;
-
-typedef struct
-{
-    int direccion;
-    int typeDato;
-    Tvalor valor;
-} TDatos;
+    cadena nombre;
+    float edad;
+    float promedio;
+    cadena carrera;
+} TEstudiante;
 
 #define TCHAR 1
 #define TINT 2
@@ -35,8 +27,10 @@ int switch1();
 int switch2(char nombre[], FILE *archivo);
 void abrirFile(char nombre[], FILE *archivo);
 void crearFile(char nombre[], FILE *archivo);
-void leerDatosFile();
+void leerDatosFile(FILE *archivo);
 void agregarDatosFile(FILE *archivo);
+bool verifyNumber(void *number, int type);
+int lengthFile(FILE *archivo);
 
 int main()
 {
@@ -128,99 +122,90 @@ int menu2()
 
 void agregarDatosFile(FILE *archivo)
 {
-    //EDITAR PARA ALUMNOS
-    TDatos datos;
-    int tipo;
+    // EDITAR PARA ALUMNOS
+    int cantidad;
+    printf("ingresa la cantidad de alumnos que deseas agregar: ");
+    scanf("%d", &cantidad);
+    TEstudiante *datos[cantidad];
+    int direccion;
     printf("************************\n");
     printf("Ingrese la direccion: ");
-    scanf("%d", &datos.direccion);
+    scanf("%d", &direccion);
+    if (!verifyNumber(&direccion, 1))
+    {
+        printf("***** Ingresa una direccion positiva *****\n");
+        scanf("%d", &direccion);
+    }
+    for (int i = 0; i < cantidad; i++)
+    {
+        datos[i] = (TEstudiante *)malloc(sizeof(TEstudiante));
+        printf("************************\n");
+        printf("Ingresa el nombre del alumno: ");
+        scanf("%s", datos[i]->nombre);
+
+        printf("Ingresa la edad del alumno: ");
+        scanf("%f", &datos[i]->edad);
+
+        printf("Ingresa el promedio del alumno: ");
+        scanf("%f", &datos[i]->promedio);
+
+        printf("Ingresa la carrera del alumno: ");
+        scanf("%s", datos[i]->carrera);
+    }
     puts("\n");
     printf("************************\n");
-    printf("Que tipo de dato es?\n * %d TCHAR *\n * %d TINT *\n * %d TFlOAT *\n * %d TDOUBLE *\n * %d TLONG *\n", TCHAR, TINT, TFlOAT, TDOUBLE, TLONG);
-    printf("************************\n");
-    printf("ingrese el tipo de dato:");
-    scanf("%d", &tipo);
-    switch (tipo)
+    for (int i = 0; i < cantidad; i++)
     {
-    case TINT:
-        printf("************************\n");
-        printf("ingrese el dato:");
-        scanf("%d", &datos.valor.entero);
-        datos.typeDato = TINT;
-        break;
-    case TCHAR:
-        printf("************************\n");
-        printf("ingrese el dato:");
-        getchar();
-        scanf("%[^\n]", datos.valor.string);
-        getchar();
-        datos.typeDato = TCHAR;
-        break;
-    case TFlOAT:
-        printf("************************\n");
-        printf("ingrese el dato:");
-        scanf("%f", &datos.valor.flotante);
-        datos.typeDato = TFlOAT;
-        break;
-    case TDOUBLE:
-        printf("************************\n");
-        printf("ingrese el dato:");
-        scanf("%lf", &datos.valor.doble);
-        datos.typeDato = TDOUBLE;
-        break;
-    case TLONG:
-        printf("************************\n");
-        printf("ingrese el dato:");
-        scanf("%ld", &datos.valor.eneteroGrande);
-        datos.typeDato = TLONG;
-        break;
-    default:
-        printf("***** Tipo de dato no valido *****\n");
-        break;
+        fseek(archivo, direccion, SEEK_SET);
+        fwrite(datos[i], sizeof(TEstudiante), 1, archivo);
     }
-    fseek(archivo, datos.direccion, SEEK_SET);
-    fwrite(&datos, sizeof(TDatos), 1, archivo);
+    // liberra memoria
+    for (int i = 0; i < cantidad; i++)
+    {
+        free(datos[i]);
+    }
 }
 
-void leerDatosFile()
+int lengthFile(FILE *archivo)
+{
+    int length;
+    fseek(archivo, 0, SEEK_END);
+    length = ftell(archivo);
+    int size = length / sizeof(TEstudiante);
+    return size;
+}
+
+void leerDatosFile(FILE *archivo)
 {
     char nombre[50];
-    TDatos datos;
-    FILE *archivo = NULL;
+    TEstudiante *datos[1];
     int direccion;
-    archivo = fopen(nombre, "rb+");
-    if (archivo == NULL)
-    {
-        printf("***** Error al abrir el archivo *****\n");
-        return;
-    }
     printf("************************\n");
     printf("Ingrese la direccion desde la que desea leer los datos: ");
     scanf("%d", &direccion);
-    switch (fseek(archivo, direccion, SEEK_SET))
+    const dir = fseek(archivo, direccion, SEEK_SET);
+    int size = lengthFile(archivo);
+    switch (dir)
     {
     case 0:
-        fread(&datos, sizeof(TDatos), 1, archivo);
-        switch (datos.typeDato)
+        fread(datos[0], sizeof(TEstudiante), 1, archivo);
+        printf("************************\n");
+        for (int i = 0; i < size; i++)
         {
-        case TINT:
-            printf("%d", datos.valor.entero);
-            break;
-        case TCHAR:
-            printf("%s", datos.valor.string);
-            break;
-        case TFlOAT:
-            printf("%f", datos.valor.flotante);
-            break;
-        case TDOUBLE:
-            printf("%lf", datos.valor.doble);
-            break;
-        case TLONG:
-            printf("%ld", datos.valor.eneteroGrande);
-            break;
-        default:
-            printf("***** Tipo de dato no valido *****\n");
-            break;
+            datos[i] = (TEstudiante *)malloc(sizeof(TEstudiante));
+            fread(datos[i], sizeof(TEstudiante), 1, archivo);
+        }
+        for (int i = 0; i < size; i++)
+        {
+            printf("Nombre: %s\n", datos[i]->nombre);
+            printf("Edad: %f\n", datos[i]->edad);
+            printf("Promedio: %f\n", datos[i]->promedio);
+            printf("Carrera: %s\n", datos[i]->carrera);
+        }
+        // libera memoria
+        for (int i = 0; i < size; i++)
+        {
+            free(datos[i]);
         }
         break;
     case -1:
@@ -232,13 +217,53 @@ void leerDatosFile()
     }
 }
 
+bool verifyNumber(void *number, int type)
+{
+    bool isNegative = true;
+    switch (type)
+    {
+    case 1:
+        if (*((int *)number) < 0)
+        {
+            printf("***** Error, el dato no puede ser negativo *****\n");
+            isNegative = false;
+        }
+        break;
+    case 3:
+        if (*((float *)number) < 0)
+        {
+            printf("***** Error, el dato no puede ser negativo *****\n");
+            isNegative = false;
+        }
+        break;
+    case 4:
+        if (*((double *)number) < 0)
+        {
+            printf("***** Error, el dato no puede ser negativo *****\n");
+            isNegative = false;
+        }
+        break;
+    case 5:
+        if (*((long *)number) < 0)
+        {
+            printf("***** Error, el dato no puede ser negativo *****\n");
+            isNegative = false;
+        }
+        break;
+    default:
+        printf("Tipo de dato no válido\n");
+        isNegative = false;
+    }
+    return isNegative;
+}
+
 void abrirFile(char nombre[], FILE *archivo)
 {
     printf("************************\n");
     puts("Recuerda que el nombre no puede tener mas de 50 caracteres, agrega la terminacion del documento .bin");
     printf("Ingresa el nombre del archivo que quieres abrir: ");
     scanf("%s", nombre);
-    //checar existencia del archivo
+    // checar existencia del archivo
     archivo = fopen(nombre, "rb+");
     if (archivo == NULL)
     {
