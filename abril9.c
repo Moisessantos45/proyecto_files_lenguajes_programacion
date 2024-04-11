@@ -30,7 +30,7 @@ void crearFile(cadena nombre, FILE **archivo);
 void leerDatosFile(FILE *archivo);
 void agregarDatosFile(FILE **archivo);
 bool verifyNumber(void *number, int type);
-int lengthFile(FILE *archivo);
+int lengthFile(FILE *archivo, long int direccion);
 
 int main()
 {
@@ -80,11 +80,9 @@ int switch2(cadena nombre, FILE **archivo)
         {
         case 1:
             leerDatosFile(*archivo);
-            menu2();
             break;
         case 2:
             agregarDatosFile(*&archivo);
-            menu2();
             break;
         case 3:
             puts("***** Volviendo al menú... *****");
@@ -144,9 +142,9 @@ int abrirFile(cadena nombre, FILE **archivo)
 
 void agregarDatosFile(FILE **archivo)
 {
-    int cantidad;
-    printf("Ingrese la cantidad de alumnos que deseas agregar: ");
-    scanf("%d", &cantidad);
+    int cantidad = 1;
+    //printf("Ingrese la cantidad de alumnos que deseas agregar: ");
+   // scanf("%d", &cantidad);
 
     TEstudiante **datos = malloc(cantidad * sizeof(TEstudiante *));
     if (datos == NULL)
@@ -214,21 +212,19 @@ void agregarDatosFile(FILE **archivo)
     free(datos);
 }
 
-int lengthFile(FILE *archivo)
-{
-    fseek(archivo, 0, SEEK_END);           // Se nueve el puntero al final del archivo
-    long int total_bytes = ftell(archivo); // Obtener la posición actual del puntero
-    rewind(archivo);                       // Volver al principio del archivo
-
-    int size_of_struct = sizeof(TEstudiante);
-    int students = total_bytes / size_of_struct;
-
-    return students;
+int lengthFile(FILE *archivo, long int direccion) {
+    fseek(archivo, direccion, SEEK_SET);
+    int count = 0;
+    TEstudiante temp;
+    while (fread(&temp, sizeof(TEstudiante), 1, archivo) == 1) {
+        count++;
+    }
+    return count;
 }
 
 void leerDatosFile(FILE *archivo)
 {
-    int direccion;
+    long int direccion;
     printf("Ingrese la direccion desde la que desea leer los datos: ");
     scanf("%d", &direccion);
     int dir = fseek(archivo, direccion, SEEK_SET);
@@ -236,7 +232,7 @@ void leerDatosFile(FILE *archivo)
     switch (dir)
     {
     case 0:
-        size = lengthFile(archivo);
+        size = lengthFile(archivo, direccion);
         TEstudiante **datos = malloc(size * sizeof(TEstudiante *));
         if (datos == NULL)
         {
