@@ -2,6 +2,6 @@
 
 int main(){
     CDiccionario dic;
-    dic.imprimeMenu();
+    dic.menuInicial();
     return 0;
 }
