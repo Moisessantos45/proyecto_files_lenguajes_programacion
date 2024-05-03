@@ -1,10 +1,14 @@
 #include "CDiccionario.h"
 
+// se inicializa el diccionario con un archivo nulo y una dirección activa de -1
+
 CDiccionario::CDiccionario()
 {
     f = null;
     dirActiva = -1;
 }
+
+// se imprime un menú con las opciones que recibe y se regresa la opción elegida por el usuario
 
 int CDiccionario::imprimeMenu(cadena *menu, int tam)
 {
@@ -17,10 +21,14 @@ int CDiccionario::imprimeMenu(cadena *menu, int tam)
     return resp;
 }
 
+// Escribe en el archivo la dirección de la entidad activa
+
 void CDiccionario::escribecabentidades()
 {
     fwrite((long)-1, sizeof(long), 1, f);
 }
+
+// Se encarga de abrir un diccionario. Se cierra el diccionario actual y se abre el diccionario que se pasa como parámetro.
 
 void CDiccionario::escribeEntidad(Entidad ent)
 {
@@ -28,6 +36,8 @@ void CDiccionario::escribeEntidad(Entidad ent)
     post = ftell(f);
     fwrite(&ent, sizeof(Entidad), 1, f);
 }
+
+// Se encarga de capturar una entidad. Se captura el nombre de la entidad y se regresa una entidad con el nombre capturado y los valores de -1 en los atributos sig, data y atr.
 
 Entidad CDiccionario::capturaEntidad()
 {
@@ -38,6 +48,8 @@ Entidad CDiccionario::capturaEntidad()
     return nueva;
 }
 
+// Se encarga de leer una entidad en una dirección específica. Usando la direccion de la entidad se lee y se regresa la entidad.
+
 Entidad leeEntidad(long dir)
 {
     Entidad ent;
@@ -46,11 +58,15 @@ Entidad leeEntidad(long dir)
     return ent;
 }
 
+// Se encarga de reescribir una entidad en una dirección específica. Usando la dirección de la entidad y una nueva entidad, se reescribe la entidad en la dirección específica.
+
 void CDiccionario::rescribeEntidad(long dir, Entidad ent)
 {
     fseek(f, dir, SEEK_SET);
     fwrite(&ent, sizeof(Entidad), 1, f);
 }
+
+// Se encarga de obtener la dirección de la cabecera de las entidades.
 
 long CDiccionario::getCabEntidades()
 {
@@ -59,6 +75,8 @@ long CDiccionario::getCabEntidades()
     fread(&cab, sizeof(long), 1, f);
     return cab;
 }
+
+// Se encarga de buscar una entidad en el diccionario. Se recibe el nombre de la entidad y se regresa la dirección de la entidad si se encuentra, de lo contrario se regresa -1.
 
 long CDiccionario::buscarEntidad(cadena nombre)
 {
@@ -76,6 +94,8 @@ long CDiccionario::buscarEntidad(cadena nombre)
     return -1;
 }
 
+// Se encarga de dar de alta una entidad. Se captura una entidad y se verifica si ya existe en el diccionario. Si no existe se escribe en el archivo y se inserta en la lista de entidades.
+
 void CDiccionario::altaEntidad()
 {
     entidad = capEntidad();
@@ -85,6 +105,8 @@ void CDiccionario::altaEntidad()
         insertaEntidad(entidad, pos);
     }
 }
+
+// Se encarga de insertar una entidad en el diccionario. Se verifica si la entidad es la primera en la lista de entidades, si es así se escribe en el archivo y se actualiza la cabecera de las entidades. Si no es la primera se recorre la lista de entidades hasta encontrar la posición correcta.
 
 void CDiccionario::insertaEntidad(Entidad ent, long dirNuevo)
 {
@@ -126,11 +148,15 @@ void CDiccionario::insertaEntidad(Entidad ent, long dirNuevo)
     }
 }
 
+// Se encarga de reescribir la cabecera de las entidades. Se recibe la dirección de la nueva cabecera y se reescribe en el archivo.
+
 void CDiccionario::rescribe(cabEntidad, long dir)
 {
     fseek(f, 0, SEEK_SET);
     fwrite(&dir, sizeof(long), 1, f);
 }
+
+// Se encarga de consultar las entidades en el diccionario. Se recorre la lista de entidades y se imprime el nombre de cada entidad.
 
 void CDiccionario::consultaEntidades()
 {
@@ -142,6 +168,8 @@ void CDiccionario::consultaEntidades()
         cab = ent.sig;
     }
 }
+
+// Se encarga de dar de baja una entidad. Se pide el nombre de la entidad y se verifica si existe en el diccionario. Si existe se elimina de la lista de entidades.
 
 void CDiccionario::bajaEntidad()
 {
@@ -155,6 +183,8 @@ void CDiccionario::bajaEntidad()
         printf("Entidad no encontrada\n");
     }
 }
+
+// Se encarga de eliminar una entidad en el diccionario. se recorre la lista de entidades hasta encontrar la entidad. Si la entidad es la primera en la lista se actualiza la cabecera de las entidades. Si no es la primera se recorre la lista de entidades hasta encontrar la entidad y se elimina.
 
 long CDiccionario::eliminaEntidad(cadena nombre)
 {

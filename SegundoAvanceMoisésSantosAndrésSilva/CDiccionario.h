@@ -9,7 +9,20 @@ typedef char cadena[30];
 
 typedef struct
 {
+    cadena nombre;
+    int tipo;
+    long cantidad;
+    struct Atributos *sig;
+    cadena isKp;
+} Atributos;
 
+typedef struct
+{
+    cadena nombre;
+    long dir;
+    long dirAtributos;
+    long dirDatos;
+    long dirSigEntidad;
 } ENTIDAD;
 
 class CDiccionario
@@ -23,13 +36,14 @@ private:
 public:
     CDiccionario();
     int imprimeMenu(cadena *menu, int tam);
-    //void reescribeCabEntidades(long dir);
+    // void reescribeCabEntidades(long dir);
     void menuInicial();
     void menuEntidades();
     void menuAtributos();
     void menuDatos();
-    //void cierraActualDiccionario();
-    //void abrirDiccionario();
+    void rescribeEntidad(long dir, Entidad ent);
+    // void cierraActualDiccionario();
+    // void abrirDiccionario();
 
     virtual ~CDiccionario();
 
@@ -166,7 +180,7 @@ void CDiccionario::menuAtributos()
 
 void CDiccionario::menuDatos()
 {
-        cadena arr[6] = {"\nElige lo que quieres hacer:", "1. Crear registro",
+    cadena arr[6] = {"\nElige lo que quieres hacer:", "1. Crear registro",
                      "2. Consultar registros", "3. Eliminar registros", "4. Modificar registros",
                      "5. Regresar al menu entidades"};
     int opc;
@@ -176,29 +190,29 @@ void CDiccionario::menuDatos()
         switch (opc)
         {
         case 1:
-            //Nuevo registro
+            // Nuevo registro
             break;
         case 2:
-            //Consultar registros
+            // Consultar registros
             break;
         case 3:
-            //Eliminar registros
+            // Eliminar registros
             break;
         case 4:
-            //Modificar registros
+            // Modificar registros
             break;
         case 5:
-            cout<<"Volviendo al menu de entidades..."<<endl;
+            cout << "Volviendo al menu de entidades..." << endl;
             break;
         default:
-            cout<<"*****Error, elige una opción valida*****"<<endl;
+            cout << "*****Error, elige una opción valida*****" << endl;
             break;
         }
     } while (opc != 5);
 }
 
 CDiccionario::~CDiccionario()
-{ 
+{
 }
 
 #endif // CDICCCIONARIO_H
