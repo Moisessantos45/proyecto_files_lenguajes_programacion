@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "cdiccionario.h": "c"
+        "cdiccionario.h": "c",
+        "iostream": "cpp"
     }
 }

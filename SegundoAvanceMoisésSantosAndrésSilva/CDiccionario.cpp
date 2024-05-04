@@ -41,9 +41,9 @@ void CDiccionario::escribeEntidad(Entidad ent)
 
 Entidad CDiccionario::capturaEntidad()
 {
-    printf("Nombre de la entidad: ");
+    cout << "Nombre de la entidad: ";
     Entidad nueva;
-    scanf("%s", nueva.nombre);
+    getline(cin, nueva.nombre);
     nueva.sig = nueva.data = nueva.atr = -1;
     return nueva;
 }

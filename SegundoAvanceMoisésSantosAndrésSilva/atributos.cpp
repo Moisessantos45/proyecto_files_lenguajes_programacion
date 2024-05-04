@@ -1,8 +1,10 @@
 #include "ATRIBUTOS.h"
 #include "CDICCIONARIO.h"
-#include <stdio.h>
+#include <iostream>
 #include <stdlib.h>
 #include <string.h>
+
+using namespace std;
 
 // busca un atributo con un nombre específico en la entidad activa y lo elimina, actualizando los enlaces de los atributos y la entidad misma si es necesario. Devuelve la dirección del atributo que se eliminó.
 
@@ -112,16 +114,16 @@ void insertaAtributo(Atributos newAtributo, long dirNueva)
 Atributos capturaAtributo()
 {
     Atributos nuevoAtributo;
-    printf("Nombre del atributo: ");
-    scanf("%s", nuevoAtributo.nombre);
-    printf("Tipo de dato: \n");
-    printf("1. Char \n 2. Int \n 3. Float \n 4. Double \n 5. Long \n");
-    scanf("%d", &nuevoAtributo.tipo);
+    cout << "Nombre del atributo: ";
+    getline(cin, nuevoAtributo.nombre);
+    cout << "Tipo de dato: \n";
+    cout << "1. Cadena \n 2. Entero \n 3. Numero con decimal \n 4. Doble \n 5. Numero grande \n";
+
     switch (nuevoAtributo.tipo)
     {
     case 1:
-        printf("Ingrese la cantidad de caracteres: ");
-        scanf("%d", &nuevoAtributo.tam);
+        cout << "Tamaño de la cadena: ";
+        cin >> nuevoAtributo.tam;
         nuevoAtributo.tam = nuevoAtributo.tam * sizeof(char);
         break;
     case 2:
@@ -138,9 +140,9 @@ Atributos capturaAtributo()
     default:
         break;
     }
-    printf("Es llave primaria ??: \n");
-    printf("1. Si \n 2. No \n");
-    scanf("%d", &nuevoAtributo.llave);
+    cout << "¿Es llave primaria? \n";
+    cout << "1. Si \n 2. No \n";
+    getline(cin, nuevoAtributo.llave);
     newAtributo.sig = -1;
     return nuevoAtributo;
 }
