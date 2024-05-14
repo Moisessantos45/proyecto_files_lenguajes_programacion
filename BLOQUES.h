@@ -51,10 +51,12 @@ void altaBloque()
         long pos = escribeBloque(bloque);
         insertaBloque(bloque, pos);
     }
+    freeI(bloque);
 }
 
 void InsertaBloque(void* nuevoB, long posB)
 {
+    void* wbAnte= NULL;
     long cabB = entActiva.data;
     if(cabB==-1)
     {
@@ -72,7 +74,9 @@ void InsertaBloque(void* nuevoB, long posB)
         }
         else{
             do{
-                void* bAnte=bloque;
+                if(bAnte!=NULL)
+                    free(bAnte);
+                bAnte=bloque;
                 long posBAnte=cabB;
                 cabB=getApSig(bloque);
                 if(cabB!=-1)
@@ -84,7 +88,8 @@ void InsertaBloque(void* nuevoB, long posB)
                 reescribeBloque(nuevoB, posB);
             }
             *((long*)(bAnte+0))=posB;
-            reescribeBloque(bAnte, posBAnte); 
+            reescribeBloque(bAnte, posBAnte);
+            free(bAnte);
         }
     }
 }
