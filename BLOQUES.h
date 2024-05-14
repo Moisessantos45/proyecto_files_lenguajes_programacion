@@ -42,3 +42,49 @@ void reescribeBloque(long dir, void* bloque)
     fseek(f, dir, SEEK_SET);
     fwrite(bloque, tambloque,1 , f);
 }
+
+void altaBloque()
+{
+    bloque = capturaBloque();
+    if(buscaBloque(Bloque)==-1)
+    {
+        long pos = escribeBloque(bloque);
+        insertaBloque(bloque, pos);
+    }
+}
+
+void InsertaBloque(void* nuevoB, long posB)
+{
+    long cabB = entActiva.data;
+    if(cabB==-1)
+    {
+        entActiva.data=posB;
+        reescribeEntidad(entActiva, posEntidad);
+    }
+    else{
+        void* bloque=leeBloque(entActiva.data);
+        if(comparaBloque(nuevoB, bloque)<0)
+        {
+            *((long*)nuevoB+0)=cabB;
+            reescribeBloque(nuevoB, posB);
+            entActiva.data=posB;
+            reescribeEntidad(entActiva, posEntActiva);
+        }
+        else{
+            do{
+                void* bAnte=bloque;
+                long posBAnte=cabB;
+                cabB=getApSig(bloque);
+                if(cabB!=-1)
+                    bloque=leeBloque(cabB);
+            } while(cabB!= -1 && comparaBloque(nuevoB, bloque)>0);
+            if(cabB != -1)
+            {
+                *((long*)(nuevo+0))=cabB;
+                reescribeBloque(nuevoB, posB);
+            }
+            *((long*)(bAnte+0))=posB;
+            reescribeBloque(bAnte, posBAnte); 
+        }
+    }
+}
