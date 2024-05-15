@@ -12,8 +12,9 @@ typedef struct atr
 {
     cadena nombre;
     int tipo;
+    int tam;
     long cantidad;
-    struct atr *sig;
+    long sig;
     cadena isKp;
 } Atributos;
 
@@ -492,7 +493,7 @@ long CDiccionario::eliminaEntidad(cadena nombre)
 long CDiccionario::eliminaAtributo(cadena nombre)
 {
     long cab = entactiva.atr;
-    long atributoAnterior;
+    Atributos atributoAnterior;
     long cabAnterior;
     Atributos atributoAtual = leeAtributo(entactiva.atr);
     if (strcmp(atributoAtual.nombre, nombre) == 0)
@@ -585,7 +586,7 @@ void CDiccionario::insertaAtributo(Atributos newAtributo, long dirNueva)
             }
             else
             {
-                atrAnterior.sig = dirNueva;
+                atrAnt.sig = dirNueva;
                 reescribeAtributo(atrAnt, cabAnt);
             }
         }
@@ -598,7 +599,7 @@ Atributos CDiccionario::capturaAtributo()
 {
     Atributos nuevoAtributo;
     cout << "Nombre del atributo: ";
-    getline(cin, nuevoAtributo.nombre);
+    cin>> nuevoAtributo.nombre;
     cout << "Tipo de dato: \n";
     cout << "1. Cadena \n 2. Entero \n 3. Numero con decimal \n 4. Doble \n 5. Numero grande \n";
 
@@ -619,14 +620,14 @@ Atributos CDiccionario::capturaAtributo()
         nuevoAtributo.tam = sizeof(double);
         break;
     case 5:
-        newAtributo.tam = sizeof(long);
+        nuevoAtributo.tam = sizeof(long);
     default:
         break;
     }
     cout << "¿Es llave primaria? \n";
     cout << "1. Si \n 2. No \n";
-    getline(cin, nuevoAtributo.llave);
-    newAtributo.sig = -1;
+    cin >> nuevoAtributo.isKp;
+    nuevoAtributo.sig = -1;
     return nuevoAtributo;
 }
 
@@ -653,10 +654,11 @@ long CDiccionario::escribeAtributo(Atributos newAtributo)
 
 void CDiccionario::altaAtributo()
 {
+    long pos;
     Atributos nuevoAtributo;
     nuevoAtributo = capturaAtributo();
 
-    if (buscarAtributo(nuevoAtributo.nombre) == -1)
+    if (buscaAtributo(nuevoAtributo.nombre) == -1)
     {
         pos = escribeAtributo(nuevoAtributo);
         insertaAtributo(nuevoAtributo, pos);
@@ -669,15 +671,15 @@ void CDiccionario::altaAtributo()
 
 long CDiccionario::buscaAtributo(cadena name)
 {
-    atributo atr;
-    long cab = entActiva.atr;
-    while(cab!=-1 && strcmpi(atr.name,name)!=0)
+    Atributos atr;
+    long cab = entactiva.atr;
+    while(cab!=-1 && strcmpi(atr.nombre,name)!=0)
     {
         atr = leeAtributo(cab);
-        if(strcmpi(atr.name, name) ==0)
+        if(strcmpi(atr.nombre, name) ==0)
             return cab;
         else
-            if(strcmpi(atr.name, name)>0)
+            if(strcmpi(atr.nombre, name)>0)
                 break;
             cab=atr.sig;
     }
@@ -686,7 +688,7 @@ long CDiccionario::buscaAtributo(cadena name)
 
 void CDiccionario::modificaAtributo()
 {
-    atrname = pidenombreAtributo();
+    atr.nombre = pidenombreAtributo();
     if(buscaAtributo(atrName)!=-1)
     {
         
