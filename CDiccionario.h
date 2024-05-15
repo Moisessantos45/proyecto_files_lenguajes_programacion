@@ -6,8 +6,11 @@
 
 using namespace std;
 
+// se declara una cadena de 30 caracteres
 typedef char cadena[30];
 
+// se declara una estructura de atributos
+// se declara el nombre del atributo, el tipo de dato, el tamaño del dato, la cantidad de datos, el siguiente atributo y si es llave primaria
 typedef struct atr
 {
     cadena nombre;
@@ -18,6 +21,8 @@ typedef struct atr
     cadena isKp;
 } Atributos;
 
+// se declara una estructura de entidad
+// esta funciona para guardar el nombre de la entidad, la dirección de la entidad, la dirección de los atributos, la dirección de los datos y la dirección de la siguiente entidad
 typedef struct
 {
     cadena nombre;
@@ -27,6 +32,8 @@ typedef struct
     long sig;
 } Entidad;
 
+// Se declara la clase CDiccionario que se encarga de manejar las entidades y los atributos
+// Se declaran las funciones que se encargan de dar de todas las funcionalidades de mi diccionario
 class CDiccionario
 {
 private:
@@ -34,6 +41,7 @@ private:
     Entidad entactiva;
     long posentactiva;
     long dirActiva;
+    long tambloque;
 
 public:
     CDiccionario();
@@ -709,6 +717,7 @@ long CDiccionario::buscaAtributo(cadena name)
     return -1;
 }
 
+// se encarga de modificar un atributo en una entidad. Se pide el nombre del atributo a modificar y se verifica si existe en la entidad activa. Si existe se captura un nuevo atributo y se verifica si ya existe en la entidad activa. Si no existe se elimina el atributo y se inserta el nuevo atributo.
 void CDiccionario::modificaAtributo()
 {
     cadena atrName;
@@ -729,12 +738,14 @@ void CDiccionario::modificaAtributo()
         cout << "El atributo " << atrName << "no existe" << endl;
 }
 
+// Pide el nombre de un atributo y lo guarda en la variable name
 void CDiccionario::pideNombreAtributo(cadena *name)
 {
     cout << "\n Dame el nombre del atributo" << endl;
     cin >> *name;
 }
 
+// Se encarga de consultar los atributos en la entidad activa. Se recorre la lista de atributos y se imprime el nombre de cada atributo.
 void CDiccionario::consultaAtributos()
 {
     long cab = getCabAtributos();
@@ -747,6 +758,7 @@ void CDiccionario::consultaAtributos()
     }
 }
 
+// Se encarga de obtener la dirección de cabecera de la entidad.
 long CDiccionario::getCabAtributos()
 {
     long cab = entactiva.atr;
