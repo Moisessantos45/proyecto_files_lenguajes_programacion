@@ -51,6 +51,7 @@ public:
     long eliminaEntidad(cadena nombre);
     void consultaEntidades();
     void pideNombreEntidad(cadena *name);
+    void modificaEntidad();
     void menuInicial();
     void menuEntidades();
     void menuAtributos();
@@ -380,7 +381,7 @@ void CDiccionario::insertaEntidad(Entidad ent, long dirNuevo)
     else
     {
         entidad = leeEntidad(cab);
-        if (strcmp(ent.nombre, entidad.nombre) < 0)
+        if (strcmpi(ent.nombre, entidad.nombre) < 0)
         {
             ent.sig = cab;
             reescribeEntidad(ent, dirNuevo);
@@ -389,7 +390,7 @@ void CDiccionario::insertaEntidad(Entidad ent, long dirNuevo)
         else
         {
             entactiva=entidad;
-            while (strcmp(ent.nombre, entactiva.nombre) > 0 && cab != -1)
+            while (strcmpi(ent.nombre, entactiva.nombre) > 0 && cab != -1)
             {
                 entidadAnt = entactiva;
                 cabAnte = cab;
@@ -456,30 +457,52 @@ void CDiccionario::pideNombreEntidad(cadena *name)
     cin >> *name;
 }
 
+void CDiccionario::modificaEntidad()
+{
+    cadena entName;
+    pideNombreEntidad(&entName);
+    if(buscarEntidad(entName)!=-1)
+    {
+        Entidad nuevaEnt = capturaEntidad();
+        if(buscarEntidad(nuevaEnt.nombre)==-1)
+        {
+            long pos=eliminaEntidad(entName);
+            reescribeEntidad(nuevaEnt, pos);
+            insertaEntidad(nuevaEnt, pos);
+        } //ERROR
+        else
+            cout <<"Esa entidad ya existe"<<endl;
+    }
+    else
+        cout<<"La entidad "<< entName << "no existe"<<endl;
+}
+
 // Se encarga de eliminar una entidad en el diccionario. se recorre la lista de entidades hasta encontrar la entidad. Si la entidad es la primera en la lista se actualiza la cabecera de las entidades. Si no es la primera se recorre la lista de entidades hasta encontrar la entidad y se elimina.
 
 long CDiccionario::eliminaEntidad(cadena nombre)
 {
     long cab = getCabEntidades();
     Entidad ent = leeEntidad(cab);
-    if (strcmp(ent.nombre, nombre) == 0)
+    if (strcmpi(ent.nombre, nombre) == 0)
     {
         reescribeCabEntidad(ent.sig);
+        return cab;
     }
     else
     {
         long posAnt;
         Entidad entAnt;
-        while (cab != -1 && strcmp(ent.nombre, nombre) != 0)
+        while (cab != -1 && strcmpi(ent.nombre, nombre) < 0)
         {
             posAnt = cab;
             entAnt = ent;
+            cab = ent.sig;
             if (cab != -1)
             {
                 ent = leeEntidad(cab);
             }
         }
-        if (strcmp(ent.nombre, nombre) == 0)
+        if (strcmpi(ent.nombre, nombre) == 0)
         {
             entAnt.sig = ent.sig;
             reescribeEntidad(entAnt, posAnt);
@@ -496,14 +519,14 @@ long CDiccionario::eliminaAtributo(cadena nombre)
     Atributos atributoAnterior;
     long cabAnterior;
     Atributos atributoAtual = leeAtributo(entactiva.atr);
-    if (strcmp(atributoAtual.nombre, nombre) == 0)
+    if (strcmpi(atributoAtual.nombre, nombre) == 0)
     {
         entactiva.atr = atributoAtual.sig;
         reescribeEntidad(entactiva, posentactiva);
     }
     else
     {
-        while (cab != -1 && strcmp(atributoAtual.nombre, nombre) < 0)
+        while (cab != -1 && strcmpi(atributoAtual.nombre, nombre) < 0)
         {
             cabAnterior = cab;
             atributoAnterior = atributoAtual;
@@ -559,7 +582,7 @@ void CDiccionario::insertaAtributo(Atributos newAtributo, long dirNueva)
     else
     {
         atrActual = leeAtributo(entactiva.atr);
-        if (strcmp(newAtributo.nombre, atrActual.nombre) < 0)
+        if (strcmpi(newAtributo.nombre, atrActual.nombre) < 0)
         {
             newAtributo.sig = entactiva.atr;
             entactiva.atr = dirNueva;
@@ -569,7 +592,7 @@ void CDiccionario::insertaAtributo(Atributos newAtributo, long dirNueva)
         else
         {
             cab = entactiva.atr;
-            while (cab != -1 && strcmp(newAtributo.nombre, atrActual.nombre) > 0)
+            while (cab != -1 && strcmpi(newAtributo.nombre, atrActual.nombre) > 0)
             {
                 atrAnt = atrActual;
                 cabAnt = cab;
@@ -688,11 +711,22 @@ long CDiccionario::buscaAtributo(cadena name)
 
 void CDiccionario::modificaAtributo()
 {
-    atr.nombre = pidenombreAtributo();
+    cadena atrName;
+    pideNombreAtributo(&atrName);
     if(buscaAtributo(atrName)!=-1)
     {
-        
+        Atributos nuevoAtr = capturaAtributo();
+        if(buscaAtributo(nuevoAtr.nombre)==-1)
+        {
+            long pos=eliminaAtributo(atrName);
+            reescribeAtributo(nuevoAtr, pos);
+            insertaAtributo(nuevoAtr, pos);
+        } //ERROR
+        else
+            cout <<"Ese atributo ya existe"<<endl;
     }
+    else
+        cout<<"El atributo "<< atrName << "no existe"<<endl;
 }
 
 void CDiccionario::pideNombreAtributo(cadena *name)
