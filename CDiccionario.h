@@ -18,7 +18,7 @@ typedef struct atr
     int tam;
     long cantidad;
     long sig;
-    cadena isKp;
+    char isKp;
 } Atributos;
 
 // se declara una estructura de entidad
@@ -386,6 +386,7 @@ void CDiccionario::insertaEntidad(Entidad ent, long dirNuevo)
     if (cab == -1)
     {
         reescribeCabEntidad(dirNuevo);
+        entactiva = ent;
     }
     else
     {
@@ -583,43 +584,55 @@ void CDiccionario::insertaAtributo(Atributos newAtributo, long dirNueva)
     Atributos atrActual;
     Atributos atrAnt;
     long cabAnt;
-    if (entactiva.atr == -1)
+    if (newAtributo.isKp == 'S')
     {
+        newAtributo.sig = entactiva.atr;
         entactiva.atr = dirNueva;
         reescribeEntidad(entactiva, posentactiva);
+        reescribeAtributo(newAtributo, dirNueva);
     }
     else
     {
-        atrActual = leeAtributo(entactiva.atr);
-        if (strcmpi(newAtributo.nombre, atrActual.nombre) < 0)
+        if (entactiva.atr == -1)
         {
-            newAtributo.sig = entactiva.atr;
             entactiva.atr = dirNueva;
             reescribeEntidad(entactiva, posentactiva);
-            reescribeAtributo(newAtributo, dirNueva);
         }
         else
         {
-            cab = entactiva.atr;
-            while (cab != -1 && strcmpi(newAtributo.nombre, atrActual.nombre) > 0)
+            atrActual = leeAtributo(entactiva.atr);
+            if (strcmpi(newAtributo.nombre, atrActual.nombre) < 0)
             {
-                atrAnt = atrActual;
-                cabAnt = cab;
-                cab = atrActual.sig;
-                if (cab != -1)
-                {
-                    atrActual = leeAtributo(cab);
-                }
-            }
-            if (cab != -1)
-            {
-                newAtributo.sig = cab;
+                newAtributo.sig = entactiva.atr;
+                entactiva.atr = dirNueva;
+                reescribeEntidad(entactiva, posentactiva);
                 reescribeAtributo(newAtributo, dirNueva);
             }
             else
             {
-                atrAnt.sig = dirNueva;
-                reescribeAtributo(atrAnt, cabAnt);
+                cab = entactiva.atr;
+                while (cab != -1 && strcmpi(newAtributo.nombre, atrActual.nombre) > 0)
+                {
+                    atrAnt = atrActual;
+                    cabAnt = cab;
+                    cab = atrActual.sig;
+                    if (cab != -1)
+                    {
+                        atrActual = leeAtributo(cab);
+                    }
+                }
+                if (cab != -1)
+                {
+                    newAtributo.sig = cab;
+                    reescribeAtributo(newAtributo, dirNueva);
+                    atrAnt.sig = dirNueva;
+                    reescribeAtributo(atrAnt, cabAnt);
+                }
+                else
+                {
+                    atrAnt.sig = dirNueva;
+                    reescribeAtributo(atrAnt, cabAnt);
+                }
             }
         }
     }
@@ -630,15 +643,16 @@ void CDiccionario::insertaAtributo(Atributos newAtributo, long dirNueva)
 Atributos CDiccionario::capturaAtributo()
 {
     Atributos nuevoAtributo;
-    cout << "Nombre del atributo: ";
+    cout << "Nombre del nuevo atributo: ";
     cin >> nuevoAtributo.nombre;
     cout << "Tipo de dato: \n";
     cout << "1. Cadena \n 2. Entero \n 3. Numero con decimal \n 4. Doble \n 5. Numero grande \n";
+    cin >> nuevoAtributo.tipo;
 
     switch (nuevoAtributo.tipo)
     {
     case 1:
-        cout << "Tamaño de la cadena: ";
+        cout << "Tamanio de la cadena: ";
         cin >> nuevoAtributo.tam;
         nuevoAtributo.tam = nuevoAtributo.tam * sizeof(char);
         break;
@@ -656,10 +670,16 @@ Atributos CDiccionario::capturaAtributo()
     default:
         break;
     }
-    cout << "¿Es llave primaria? \n";
-    cout << "1. Si \n 2. No \n";
-    cin >> nuevoAtributo.isKp;
+    cout << "Es llave primaria? \n";
+    do
+    {
+        cout << "s-Si \n n-No \n";
+        cin >> nuevoAtributo.isKp;
+        if (nuevoAtributo.isKp != 's' && nuevoAtributo.isKp != 'n')
+            cout << "Elige una opcion valida" << endl;
+    } while (nuevoAtributo.isKp != 's' && nuevoAtributo.isKp != 'n');
     nuevoAtributo.sig = -1;
+    nuevoAtributo.cantidad = 0;
     return nuevoAtributo;
 }
 
@@ -705,15 +725,16 @@ long CDiccionario::buscaAtributo(cadena name)
 {
     Atributos atr;
     long cab = entactiva.atr;
-    while (cab != -1 && strcmpi(atr.nombre, name) != 0)
-    {
-        atr = leeAtributo(cab);
-        if (strcmpi(atr.nombre, name) == 0)
-            return cab;
-        else if (strcmpi(atr.nombre, name) > 0)
-            break;
-        cab = atr.sig;
-    }
+    if (cab != -1)
+        do
+        {
+            atr = leeAtributo(cab);
+            if (strcmpi(atr.nombre, name) == 0)
+                return cab;
+            else if (strcmpi(atr.nombre, name) > 0)
+                break;
+            cab = atr.sig;
+        } while (cab != -1 && strcmpi(atr.nombre, name) != 0);
     return -1;
 }
 
@@ -750,12 +771,18 @@ void CDiccionario::consultaAtributos()
 {
     long cab = getCabAtributos();
     Atributos atr;
-    while (cab != -1)
+    if (-1 != cab)
     {
-        atr = leeAtributo(cab);
-        cout << atr.nombre << endl;
-        cab = atr.sig;
+        cout << "Nombre \t" << "Tipo \t" << "Tamanio \t" << "Cantidad \t" << "Is KP \t" << endl;
+        while (cab != -1)
+        {
+            atr = leeAtributo(cab);
+            cout << atr.nombre << "\t" << atr.tipo << "\t" << atr.tam << "\t" << atr.cantidad << "\t" << atr.isKp << endl;
+            cab = atr.sig;
+        }
     }
+    else
+        cout << "Aun no hay atributos" << endl;
 }
 
 // Se encarga de obtener la dirección de cabecera de la entidad.
