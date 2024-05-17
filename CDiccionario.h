@@ -1,7 +1,7 @@
 // #ifndef CDICCCIONARIO_H
 // #define CDICCCIONARIO_H
-#include <iostream>
 #include <string.h>
+#include <iostream>
 #include <unistd.h>
 
 using namespace std;
@@ -67,6 +67,7 @@ public:
     void reescribeEntidad(Entidad ent, long dir);
     void cierraActualDiccionario();
     int abrirDiccionario();
+    int crearDiccionario();
     long eliminaAtributo(cadena nombre);
     void bajaAtributo();
     Atributos leeAtributo(long dir);
@@ -80,6 +81,7 @@ public:
     void pideNombreAtributo(cadena *name);
     void consultaAtributos();
     long getCabAtributos();
+    int pedirEntidad();
 
     virtual ~CDiccionario();
 
@@ -89,6 +91,23 @@ protected:
 // Cierra cualquier archivo abierto, pide el nombre y si no existia uno
 // así llamado ya, regresa un 1, si no un 0
 int CDiccionario::abrirDiccionario()
+{
+    cadena namefile;
+    cierraActualDiccionario();
+    cout << "Como se llama el diccionario que quieres abrir" << endl;
+    cin >> namefile;
+    if (access(namefile, F_OK) == -1)
+    {
+        f = fopen(namefile, "r+b");
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+int CDiccionario::crearDiccionario()
 {
     cadena namefile;
     cierraActualDiccionario();
@@ -126,7 +145,7 @@ void CDiccionario::menuInicial()
         switch (opc)
         {
         case 1:
-            if (abrirDiccionario() == 1)
+            if (crearDiccionario() == 1)
             {
                 escribeCabEntidades();
                 menuEntidades();
@@ -177,10 +196,12 @@ void CDiccionario::menuEntidades()
             modificaEntidad();
             break;
         case 5:
-            menuAtributos(); // nombre) &archivo);
+            if(pedirEntidad()==1)
+                menuAtributos(); // nombre) &archivo);
             break;
         case 6:
-            menuDatos(); // nombre &archivo);
+            if(pedirEntidad()==1)
+                menuDatos(); // nombre &archivo);
             break;
         case 7:
             cout << "Volviendo al menu principal..." << endl;
@@ -790,5 +811,28 @@ long CDiccionario::getCabAtributos()
 {
     long cab = entactiva.atr;
     return cab;
+}
+
+int CDiccionario::pedirEntidad()
+{
+    cadena name;
+    long dir;
+    pideNombreEntidad(&name);
+    if (buscarEntidad(name) != -1)
+    {
+        dir = getCabEntidades();
+        entactiva = leeEntidad(dir);
+        while (strcmpi(name, entactiva.nombre) != 0)
+        {
+            dir = entactiva.sig;
+            entactiva = leeEntidad(dir);
+        }
+        return 1;
+    }
+    else
+    {
+        cout << "La entidad no existe" << endl;
+        return -1;
+    }
 }
 // #endif // CDICCCIONARIO_H
