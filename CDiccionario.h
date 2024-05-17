@@ -107,6 +107,8 @@ int CDiccionario::abrirDiccionario()
     }
 }
 
+// esta funcion se encarga de crear un diccionario
+// se pide el nombre del diccionario y si no existe ya un archivo con ese nombre
 int CDiccionario::crearDiccionario()
 {
     cadena namefile;
@@ -488,6 +490,7 @@ void CDiccionario::pideNombreEntidad(cadena *name)
     cin >> *name;
 }
 
+// se encarga de modificar una entidad en el diccionario. Se pide el nombre de la entidad a modificar y se verifica si existe en el diccionario. Si existe se captura una nueva entidad y se verifica si ya existe en el diccionario. Si no existe se elimina la entidad y se inserta la nueva entidad.
 void CDiccionario::modificaEntidad()
 {
     cadena entName;
@@ -813,6 +816,7 @@ long CDiccionario::getCabAtributos()
     return cab;
 }
 
+// Se encarga de pedir una entidad y la guarda en la variable entactiva. Se pide el nombre de la entidad y se busca en el diccionario. Si se encuentra se guarda en la variable entactiva.
 int CDiccionario::pedirEntidad()
 {
     cadena name;
