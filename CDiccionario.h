@@ -42,6 +42,9 @@ private:
     long posentactiva;
     long dirActiva;
     long tambloque;
+    void* bloque;
+    int Natributos;
+    Atributos atributos;
 
 public:
     CDiccionario();
@@ -68,6 +71,7 @@ public:
     void cierraActualDiccionario();
     int abrirDiccionario();
     int crearDiccionario();
+        //  ATRIBUTOS
     long eliminaAtributo(cadena nombre);
     void bajaAtributo();
     Atributos leeAtributo(long dir);
@@ -82,6 +86,15 @@ public:
     void consultaAtributos();
     long getCabAtributos();
     int pedirEntidad();
+        //BLOQUES
+    long buscaBloque(void *bloque);
+    void *leeBloque(long dir);
+    long escribeBloque(void *nuevo);
+    void reescribeBloque(long dir, void *bloque);
+    void altaBloque();
+    void InsertaBloque(void *nuevoB, long posB);
+    int comparaBloque(void *bloque1, void *bloque2);
+    void *getApuntadorSig(void *bloque);
 
     virtual ~CDiccionario();
 
@@ -264,7 +277,7 @@ void CDiccionario::menuDatos()
         switch (opc)
         {
         case 1:
-            // Nuevo registro
+            altaBloque();
             break;
         case 2:
             // Consultar registros
@@ -545,6 +558,32 @@ long CDiccionario::eliminaEntidad(cadena nombre)
     return cab;
 }
 
+// Se encarga de pedir una entidad y la guarda en la variable entactiva. Se pide el nombre de la entidad y se busca en el diccionario. Si se encuentra se guarda en la variable entactiva.
+int CDiccionario::pedirEntidad()
+{
+    cadena name;
+    long dir;
+    pideNombreEntidad(&name);
+    if (buscarEntidad(name) != -1)
+    {
+        dir = getCabEntidades();
+        entactiva = leeEntidad(dir);
+        while (strcmpi(name, entactiva.nombre) != 0)
+        {
+            dir = entactiva.sig;
+            entactiva = leeEntidad(dir);
+        }
+        return 1;
+    }
+    else
+    {
+        cout << "La entidad no existe" << endl;
+        return -1;
+    }
+}
+
+            //ATRIBUTOS
+
 // busca un atributo con un nombre específico en la entidad activa y lo elimina, actualizando los enlaces de los atributos y la entidad misma si es necesario. Devuelve la dirección del atributo que se eliminó.
 
 long CDiccionario::eliminaAtributo(cadena nombre)
@@ -816,27 +855,138 @@ long CDiccionario::getCabAtributos()
     return cab;
 }
 
-// Se encarga de pedir una entidad y la guarda en la variable entactiva. Se pide el nombre de la entidad y se busca en el diccionario. Si se encuentra se guarda en la variable entactiva.
-int CDiccionario::pedirEntidad()
+
+            //BLOQUES//
+
+
+// esta funcion se encarga de capturar un bloque
+// se captura el bloque mediante la clave primaria
+long CDiccionario::buscaBloque(void *bloque)
 {
-    cadena name;
-    long dir;
-    pideNombreEntidad(&name);
-    if (buscarEntidad(name) != -1)
+    long cabData = entActiva.data;
+    void *auxB;
+    while (cabData != -1)
     {
-        dir = getCabEntidades();
-        entactiva = leeEntidad(dir);
-        while (strcmpi(name, entactiva.nombre) != 0)
+        auxB = leeBloque(cabData);
+        if (comparaBloques(auxB, bloque) == 0)
+            return cabData;
+        else
         {
-            dir = entactiva.sig;
-            entactiva = leeEntidad(dir);
+            if (comparaBloques(auxB, bloque) > 0)
+                return -1;
+            else
+                cabData = getApuntadorSig(auxB);
         }
-        return 1;
+    }
+    return -1;
+}
+
+// esta funcion se encarga de leer un bloque en el archivo
+// se lee el bloque en la posicion que le corresponde
+void * CDiccionario::leeBloque(long dir)
+{
+    if (dir != -1)
+    {
+        void *bloque = malloc(tambloque);
+        fseek(f, dir, SEEK_SET);
+        fread(bloque, tambloque, 1, f);
+        return bloque;
+    }
+    else
+        return NULL;
+}
+
+// esta funcion se encarga de escribir un bloque en el archivo
+// se escribe el bloque se escribe en la ultima posicion del archivo
+
+long CDiccionario::escribeBloque(void *nuevo)
+{
+    fseek(f, 0, SEEK_END);
+    pos = ftell(f);
+    fwrite(nuevo, tambloque, 1, f);
+    return pos;
+}
+
+// esta funcion se encarga de reescribir un bloque en el archivo
+// se reescribe el bloque en la posicion que le corresponde
+
+void CDiccionario::reescribeBloque(long dir, void *bloque)
+{
+    fseek(f, dir, SEEK_SET);
+    fwrite(bloque, tambloque, 1, f);
+}
+
+void CDiccionario::altaBloque()
+{
+    bloque = capturaBloque();
+    if (buscaBloque(bloque) == -1)
+    {
+        long pos = escribeBloque(bloque);
+        insertaBloque(bloque, pos);
+    }
+    free(bloque);
+}
+
+// esta funcion se encarga de insertar un bloque en la lista de bloques
+// se inserta el bloque en la posicion que le corresponde
+
+void CDiccionario::InsertaBloque(void *nuevoB, long posB)
+{
+    void *wbAnte = NULL;
+    long cabB = entActiva.data;
+    if (cabB == -1)
+    {
+        entActiva.data = posB;
+        reescribeEntidad(entActiva, posEntidad);
     }
     else
     {
-        cout << "La entidad no existe" << endl;
-        return -1;
+        void *bloque = leeBloque(entActiva.data);
+        if (comparaBloque(nuevoB, bloque) < 0)
+        {
+            *((long *)nuevoB + 0) = cabB;
+            reescribeBloque(nuevoB, posB);
+            entActiva.data = posB;
+            reescribeEntidad(entActiva, posEntActiva);
+        }
+        else
+        {
+            do
+            {
+                if (bAnte != NULL)
+                    free(bAnte);
+                bAnte = bloque;
+                long posBAnte = cabB;
+                cabB = getApSig(bloque);
+                if (cabB != -1)
+                    bloque = leeBloque(cabB);
+            } while (cabB != -1 && comparaBloque(nuevoB, bloque) > 0);
+            if (cabB != -1)
+            {
+                *((long *)(nuevo + 0)) = cabB;
+                reescribeBloque(nuevoB, posB);
+            }
+            *((long *)(bAnte + 0)) = posB;
+            reescribeBloque(bAnte, posBAnte);
+            free(bAnte);
+        }
     }
 }
+
+// esta funcion se encargar de comparar dos bloques y devolver un entero
+// se calcular la diferencia entre dos bloques mediante la clave primaria
+int CDiccionario::comparaBloque(void *bloque1, void *bloque2)
+{
+    const char *clave1 = ((Atributos *)((char *)bloque1 + sizeof(long)))->isKp; 
+    const char *clave2 = ((Atributos *)((char *)bloque2 + sizeof(long)))->isKp;
+    return strcmp(clave1, clave2);
+}
+
+// esta funcion se encarga de obtener el apuntador siguiente de un bloque
+// mediante el tamaño del bloque se obtiene el apuntador siguiente
+void * CDiccionario::getApuntadorSig(void *bloque)
+{
+    return (long *)(bloque + tambloque);
+}
+
 // #endif // CDICCCIONARIO_H
