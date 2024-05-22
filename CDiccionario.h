@@ -16,7 +16,6 @@ typedef struct atr
     cadena nombre;
     int tipo;
     int tam;
-    long cantidad;
     long sig;
     char isKp;
 } Atributos;
@@ -40,11 +39,9 @@ private:
     FILE *f;
     Entidad entactiva;
     long posentactiva;
-    long dirActiva;
     long tambloque;
-    void* bloque;
     int Natributos;
-    Atributos atributos;
+    Atributos atributos[50];
 
 public:
     CDiccionario();
@@ -71,7 +68,7 @@ public:
     void cierraActualDiccionario();
     int abrirDiccionario();
     int crearDiccionario();
-        //  ATRIBUTOS
+    //  ATRIBUTOS
     long eliminaAtributo(cadena nombre);
     void bajaAtributo();
     Atributos leeAtributo(long dir);
@@ -86,7 +83,7 @@ public:
     void consultaAtributos();
     long getCabAtributos();
     int pedirEntidad();
-        //BLOQUES
+    // BLOQUES
     long buscaBloque(void *bloque);
     void *leeBloque(long dir);
     long escribeBloque(void *nuevo);
@@ -94,7 +91,10 @@ public:
     void altaBloque();
     void InsertaBloque(void *nuevoB, long posB);
     int comparaBloque(void *bloque1, void *bloque2);
-    void *getApuntadorSig(void *bloque);
+    long getApuntadorSig(void *bloque);
+    long bajaSecuencial(void *bloque);
+    long eliminaBloque(void *claveB);
+    void *capturaBloque();
 
     virtual ~CDiccionario();
 
@@ -111,11 +111,12 @@ int CDiccionario::abrirDiccionario()
     cin >> namefile;
     if (access(namefile, F_OK) == -1)
     {
-        f = fopen(namefile, "r+b");
+        f = fopen(namefile, "rb+");
         return 1;
     }
     else
     {
+        cout << "el archivo no existe" << endl;
         return 0;
     }
 }
@@ -130,11 +131,12 @@ int CDiccionario::crearDiccionario()
     cin >> namefile;
     if (access(namefile, F_OK) == -1)
     {
-        f = fopen(namefile, "w+b");
+        f = fopen(namefile, "wb+");
         return 1;
     }
     else
     {
+        cout << "El archivo ya existe" << endl;
         return 0;
     }
 }
@@ -165,14 +167,10 @@ void CDiccionario::menuInicial()
                 escribeCabEntidades();
                 menuEntidades();
             }
-            else
-                cout << "El archivo ya existe" << endl;
             break;
         case 2:
             if (abrirDiccionario() == 0)
                 menuEntidades();
-            else
-                cout << "El archivo no existe" << endl;
             break;
         case 3:
             cierraActualDiccionario();
@@ -211,11 +209,11 @@ void CDiccionario::menuEntidades()
             modificaEntidad();
             break;
         case 5:
-            if(pedirEntidad()==1)
+            if (pedirEntidad() == 1)
                 menuAtributos(); // nombre) &archivo);
             break;
         case 6:
-            if(pedirEntidad()==1)
+            if (pedirEntidad() == 1)
                 menuDatos(); // nombre &archivo);
             break;
         case 7:
@@ -310,7 +308,7 @@ using namespace std;
 CDiccionario::CDiccionario()
 {
     f = NULL;
-    dirActiva = -1;
+    posentactiva = -1;
 }
 
 // se imprime un menú con las opciones que recibe y se regresa la opción elegida por el usuario
@@ -582,7 +580,7 @@ int CDiccionario::pedirEntidad()
     }
 }
 
-            //ATRIBUTOS
+// ATRIBUTOS
 
 // busca un atributo con un nombre específico en la entidad activa y lo elimina, actualizando los enlaces de los atributos y la entidad misma si es necesario. Devuelve la dirección del atributo que se eliminó.
 
@@ -742,7 +740,6 @@ Atributos CDiccionario::capturaAtributo()
             cout << "Elige una opcion valida" << endl;
     } while (nuevoAtributo.isKp != 's' && nuevoAtributo.isKp != 'n');
     nuevoAtributo.sig = -1;
-    nuevoAtributo.cantidad = 0;
     return nuevoAtributo;
 }
 
@@ -836,11 +833,11 @@ void CDiccionario::consultaAtributos()
     Atributos atr;
     if (-1 != cab)
     {
-        cout << "Nombre \t" << "Tipo \t" << "Tamanio \t" << "Cantidad \t" << "Is KP \t" << endl;
+        cout << "Nombre \t" << "Tipo \t" << "Tamanio \t" << "Is KP \t" << endl;
         while (cab != -1)
         {
             atr = leeAtributo(cab);
-            cout << atr.nombre << "\t" << atr.tipo << "\t" << atr.tam << "\t" << atr.cantidad << "\t" << atr.isKp << endl;
+            cout << atr.nombre << "\t" << atr.tipo << "\t" << atr.tam << "\t" << "\t" << atr.isKp << endl;
             cab = atr.sig;
         }
     }
@@ -855,24 +852,22 @@ long CDiccionario::getCabAtributos()
     return cab;
 }
 
-
-            //BLOQUES//
-
+// BLOQUES//
 
 // esta funcion se encarga de capturar un bloque
 // se captura el bloque mediante la clave primaria
 long CDiccionario::buscaBloque(void *bloque)
 {
-    long cabData = entActiva.data;
+    long cabData = entactiva.data;
     void *auxB;
     while (cabData != -1)
     {
         auxB = leeBloque(cabData);
-        if (comparaBloques(auxB, bloque) == 0)
+        if (comparaBloque(auxB, bloque) == 0)
             return cabData;
         else
         {
-            if (comparaBloques(auxB, bloque) > 0)
+            if (comparaBloque(auxB, bloque) > 0)
                 return -1;
             else
                 cabData = getApuntadorSig(auxB);
@@ -883,7 +878,7 @@ long CDiccionario::buscaBloque(void *bloque)
 
 // esta funcion se encarga de leer un bloque en el archivo
 // se lee el bloque en la posicion que le corresponde
-void * CDiccionario::leeBloque(long dir)
+void *CDiccionario::leeBloque(long dir)
 {
     if (dir != -1)
     {
@@ -902,7 +897,7 @@ void * CDiccionario::leeBloque(long dir)
 long CDiccionario::escribeBloque(void *nuevo)
 {
     fseek(f, 0, SEEK_END);
-    pos = ftell(f);
+    long pos = ftell(f);
     fwrite(nuevo, tambloque, 1, f);
     return pos;
 }
@@ -918,7 +913,7 @@ void CDiccionario::reescribeBloque(long dir, void *bloque)
 
 void CDiccionario::altaBloque()
 {
-    bloque = capturaBloque();
+    void *bloque = capturaBloque();
     if (buscaBloque(bloque) == -1)
     {
         long pos = escribeBloque(bloque);
@@ -977,16 +972,98 @@ void CDiccionario::InsertaBloque(void *nuevoB, long posB)
 // se calcular la diferencia entre dos bloques mediante la clave primaria
 int CDiccionario::comparaBloque(void *bloque1, void *bloque2)
 {
-    const char *clave1 = ((Atributos *)((char *)bloque1 + sizeof(long)))->isKp; 
+    const char *clave1 = ((Atributos *)((char *)bloque1 + sizeof(long)))->isKp;
     const char *clave2 = ((Atributos *)((char *)bloque2 + sizeof(long)))->isKp;
     return strcmp(clave1, clave2);
 }
 
 // esta funcion se encarga de obtener el apuntador siguiente de un bloque
 // mediante el tamaño del bloque se obtiene el apuntador siguiente
-void * CDiccionario::getApuntadorSig(void *bloque)
+long CDiccionario::getApuntadorSig(void *bloque)
 {
     return (long *)(bloque + tambloque);
 }
+
+void CDiccionario::bajaSecuencia()
+{
+    voi *claveB = capturaBloquePorClave();
+    long bloque = eliminaBloque(claveB);
+}
+
+long CDiccionario::eliminaBloque(void *claveB)
+{
+    long cab = entActiva.data;
+    if (cab != -1)
+    {
+        void *bActual = leeBloque(cab);
+        if (comparaBloque(claveB, bActual) == 0)
+        {
+            entAct.data = getApSig(bActual);
+            reescribeEntidad(entActiva, posEntActiva);
+            return cab;
+        }
+        else
+        {
+            do
+            {
+                long posAnt = cab;
+                void *bAnt = bActual;
+                cab = getApuntadorSig(bActual);
+                if (cab != -1)
+                    bActual = leeBloque(cab);
+            } while (cab != -1 && comparaBloque(claveB, bActual));
+        }
+        if (cab != -1 && comparaBloque(bActual, claveB) == 0)
+        {
+            setApSig(bAnt, getApuntadorSig(bActual));
+            reescribeBloque(bAnt, posAnt);
+            return cab;
+        }
+    }
+    return -1;
+}
+
+void *CDiccionario::capturaBloque()
+{
+    long desp = sizeof(long);
+    void *nuevoB = malloc(tambloque);
+    *((long *)(nuevoB + 0)) = (long)-1;
+    if (nuevoB)
+    {
+        for (int i = 0; i < Natributos; i++)
+        {
+            switch (atributos[i].tipo)
+            {
+                cout << "ingrese el " << atributos[i].nombre << endl;
+            case 1:
+                char cad[500];
+                cin.getline(cad, 500);
+                cad[strlen(cadena)] = '\0';
+                if (strlen >= atributos[i].tam - 1)
+                    cad[atributos[i].tam - 1] = '\0';
+                strcpy((char*)(nuevoB + desp), cad); ////?????
+                break;
+            case 2:
+                cin >> ((int)(nuevoB + desp));
+                break;
+            case 3:
+                cin >> ((float)(nuevoB + desp));
+                break;
+            case 4:
+                cin >> ((double)(nuevoB + desp));
+                break;
+            case 5:
+                cin >> ((long)(nuevoB + desp));
+                break;
+            }
+            desp+=atributos[i].tam;
+        }
+    }
+    return (nuevoB);
+}
+// ADD GET ATRIBUTOS ->Carga atributos en atributos(arreglo de atributos)->cuenta atributos en Natributos
+//->toma el tambloque->Kp en atributos
+// Campos de bloque aceptan  espacios, todos los demás no cin.getline(arr, arrAtr[i].tam);
+// kbhit();
 
 // #endif // CDICCCIONARIO_H
