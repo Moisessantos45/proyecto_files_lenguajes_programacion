@@ -3,6 +3,18 @@
 #include <string.h>
 #include "CDiccionario.h"
 
+bool existeKP()
+{
+    for (int i = 0; i < nAtr; i++)
+    {
+        if (data[i].iskp == 's' || data[i].iskp == 'S')
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 // esta funcion se encarga de capturar un bloque
 // se captura el bloque mediante la clave primaria
 long buscaBloque(void *bloque)
@@ -121,14 +133,27 @@ void InsertaBloque(void *nuevoB, long posB)
 // se calcular la diferencia entre dos bloques mediante la clave primaria
 int comparaBloque(void *bloque1, void *bloque2)
 {
-    const char *clave1 = ((Atributos *)((char *)bloque1 + sizeof(long)))->isKp;
-    const char *clave2 = ((Atributos *)((char *)bloque2 + sizeof(long)))->isKp;
-    return strcmp(clave1, clave2);
+    double resul;
+    switch (data[0].tipo)
+    {
+    case 1:
+        resul = strcmp(((char *)(bloque1 + sizeof(long))), ((char *)(bloque2 + sizeof(long))));
+    case 2:
+        resul = *((int *)(bloque1 + sizeof(long))) - *((int *)(bloque2 + sizeof(long)));
+    case 3:
+        resul = *((float *)(bloque1 + sizeof(long))) - *((float *)(bloque2 + sizeof(long)));
+    case 4:
+        resul = *((double *)(bloque1 + sizeof(long))) - *((double *)(bloque2 + sizeof(long)));
+    case 5:
+        resul = *((long *)(bloque1 + sizeof(long))) - *((long *)(bloque2 + sizeof(long)));
+    }
+    return resul;
 }
 
 // esta funcion se encarga de obtener el apuntador siguiente de un bloque
 // mediante el tamaño del bloque se obtiene el apuntador siguiente
-void *getApuntadorSig(void *bloque)
+long *getApuntadorSig(void *bloque)
 {
-    return (long *)(bloque + tambloque);
+    long apSig = *((long *)((char *)bloque));
+    return apSig;
 }

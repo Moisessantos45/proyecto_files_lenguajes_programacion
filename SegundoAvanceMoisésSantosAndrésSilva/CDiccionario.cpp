@@ -1,4 +1,6 @@
 #include "CDiccionario.h"
+#include <iostream>
+#include <string>
 
 // se inicializa el diccionario con un archivo nulo y una dirección activa de -1
 

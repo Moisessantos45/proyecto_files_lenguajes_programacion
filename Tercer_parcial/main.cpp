@@ -1,7 +1,7 @@
-#include "CDiccionario.h"
 #include <iostream>
 #include <string>
 using namespace std;
+#include "CDiccionario.h"
 
 int main(){
     CDiccionario dic;

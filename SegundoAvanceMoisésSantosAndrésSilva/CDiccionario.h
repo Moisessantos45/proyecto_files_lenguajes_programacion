@@ -1,20 +1,21 @@
 #ifndef CDICCCIONARIO_H
-#define CDICCCIONARIO_H
+#define CDICCCIONARIO_H 0
 #include <iostream>
 #include <string>
 
 using namespace std;
 
 typedef char cadena[30];
+typedef struct Atributos Atributos;  
 
-typedef struct
+struct Atributos
 {
     cadena nombre;
     int tipo;
     long cantidad;
-    struct Atributos *sig;
+    Atributos *sig;
     cadena isKp;
-} Atributos;
+};
 
 typedef struct
 {
@@ -41,7 +42,7 @@ public:
     void menuEntidades();
     void menuAtributos();
     void menuDatos();
-    void rescribeEntidad(long dir, Entidad ent);
+    void rescribeEntidad(long dir, ENTIDAD *ent);
     // void cierraActualDiccionario();
     // void abrirDiccionario();
 
