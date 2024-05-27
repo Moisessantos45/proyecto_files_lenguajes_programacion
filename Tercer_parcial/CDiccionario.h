@@ -2,7 +2,6 @@
 #define CDICCCIONARIO_H 0
 
 #include <iostream>
-#include <string>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -76,11 +75,12 @@ public:
     void menuAtributos();
     void menuDatos();
 
-    // ATRIBUTOS
+    // DICCIONARIO-> ATRIBUTOS
     void reescribeEntidad(Entidad ent, long dir);
     void cierraActualDiccionario();
     int abrirDiccionario();
     int crearDiccionario();
+
     //  ATRIBUTOS
     long eliminaAtributo(cadena nombre);
     void bajaAtributo();
@@ -99,8 +99,8 @@ public:
     long clavePrimaria();
     void cambiaKP();
 
-    // Bloques
-    void getAtributos();
+    // BLOQUES
+    int getAtributos();
     void *capturaBloque();
     long getApuntadorSig(void *bloque);
     void setApuntadorSig(void *bloque, long dir);
@@ -114,6 +114,7 @@ public:
     long buscaBloque(void *bloque);
     void bajaSecuencia();
     long eliminaBloque(void *claveB);
+    void consultaBloques();
 
     virtual ~CDiccionario();
 
@@ -127,11 +128,12 @@ int CDiccionario::abrirDiccionario()
     cadena namefile;
     cout << "Como se llama el diccionario que quieres abrir" << endl;
     cin >> namefile;
-    if (fopen(namefile, "rb+") != NULL)
+    f = fopen(namefile, "rb+");
+    if (f != NULL)
         return 1;
     else
     {
-        cout << "el archivo no existe" << endl;
+        cout << "El archivo no existe" << endl;
         return 0;
     }
 }
@@ -292,16 +294,20 @@ void CDiccionario::menuDatos()
         switch (opc)
         {
         case 1:
-            // altaBloque();
+            if (getAtributos() == 1)
+                altaBloque();
+            else{
+                cout<<"Simon"<<endl;
+            }
             break;
         case 2:
-            // Consultar registros
+            consultaBloques();
             break;
         case 3:
-            // Eliminar registros
+            bajaSecuencia();
             break;
         case 4:
-            // Modificar registros
+            // modificaB
             break;
         case 5:
             cout << "Volviendo al menu de Entidades..." << endl;
@@ -579,8 +585,11 @@ long CDiccionario::eliminaEntidad(cadena nombre)
 // Se encarga de pedir una entidad y la guarda en la variable entactiva. Se pide el nombre de la entidad y se busca en el diccionario. Si se encuentra se guarda en la variable entactiva.
 int CDiccionario::pedirEntidad()
 {
+    tambloque = 0;
     cadena name;
     long dir;
+    Atributos atr;
+    long dirA;
     pideNombreEntidad(&name);
     if (buscarEntidad(name) != -1)
     {
@@ -934,52 +943,29 @@ void CDiccionario::cambiaKP()
 
 // BLOQUES
 
-void CDiccionario::getAtributos()
+int CDiccionario::getAtributos()
 {
-    Atributos aux, claveP;
-    long pos;
-    tambloque = 0;
-    Natributos = 0;
-    if (entactiva.atr != -1)
+    Atributos aux;
+    long pos, cab = entactiva.atr;
+    Natributos = tambloque = 0;
+    if (cab != -1)
     {
-        long cab = entactiva.atr;
-        while (cab != -1)
+        do
         {
             aux = leeAtributo(cab);
-            if (aux.isKp == 's' || aux.isKp == 'S')
-                claveP = aux;
-            atributos[Natributos] = aux;
+            strcpy(atributos[Natributos].nombre, aux.nombre);
+            atributos[Natributos].tam = aux.tam;
+            atributos[Natributos].tipo = aux.tipo;
             tambloque += aux.tam;
             cab = aux.sig;
             Natributos++;
-        }
-        if (claveP.isKp == 'n' || claveP.isKp == 'N')
-        {
-            cout << "No hay clave primaria" << endl;
-            exit(1);
-        }
-        else
-        {
-            Atributos newATributo[Natributos];
-            newATributo[0] = claveP;
-            tambloque = claveP.tam + sizeof(long);
-            pos = entactiva.atr;
-            int i;
-            for (i = 1; i < Natributos; i++)
-            {
-                aux = leeAtributo(pos);
-                if (aux.isKp == aux.isKp)
-                {
-                    i--;
-                }
-                else
-                {
-                    newATributo[i] = aux;
-                    tambloque += aux.tam;
-                }
-                pos = aux.sig;
-            }
-        }
+        } while (cab != -1);
+        return 1;
+    }
+    else
+    {
+        cout << "Esta entidad no tiene atributos" << endl;
+        return -1;
     }
 }
 
@@ -987,46 +973,56 @@ void *CDiccionario::capturaBloque()
 {
     long desp = sizeof(long);
     void *newBloque = malloc(tambloque);
-    *((long *)(newBloque + 0)) = (long)-1;
-    if (bloque == NULL || newBloque == NULL)
+    *((long *)((char *)newBloque + 0)) = (long)-1;
+    if (newBloque == NULL)
     {
         cout << "No hay memoria" << endl;
-        exit(1);
+        return 0;
     }
-
+    getAtributos();
     for (int i = 0; i < Natributos; i++)
     {
         switch (atributos[i].tipo)
         {
         case 1:
-            cout << "Ingresa un nombre " << atributos[i].nombre << endl;
+            cout << "Ingresa el " << atributos[i].nombre << endl;
             char cadena[500];
             cin >> cadena;
             cadena[strlen(cadena)] = '\0';
-            if (strlen(cadena) > atributos[i].tam)
-            {
+            if (strlen(cadena) >= atributos[i].tam)
                 cadena[atributos[i].tam - 1] = '\0';
-            }
-            strcpy((char *)(newBloque + desp), cadena);
-
+            strcpy((char *)((char *)newBloque + desp), cadena);
             break;
         case 2:
-            cout << "Dame el valor de " << atributos[i].nombre << endl;
+            int datoI;
+            cout << "Dame el " << atributos[i].nombre << endl;
+            cin >> datoI;
+            *(int *)((char *)newBloque + desp) = datoI;
             break;
         case 3:
-            cout << "Dame el valor de " << atributos[i].nombre << endl;
+            float datoF;
+            cout << "Dame el " << atributos[i].nombre << endl;
+            cin >> datoF;
+            *(float *)((char *)newBloque + desp) = datoF;
             break;
         case 4:
-            cout << "Dame el valor de " << atributos[i].nombre << endl;
+            double datoD;
+            cout << "Dame el " << atributos[i].nombre << endl;
+            cin >> datoD;
+            *(double *)((char *)newBloque + desp) = datoD;
             break;
         case 5:
-            cout << "Dame el valor de " << atributos[i].nombre << endl;
+            long datoL;
+            cout << "Dame el " << atributos[i].nombre << endl;
+            cin >> datoL;
+            *(long *)((char *)newBloque + desp) = datoL;
             break;
         default:
             break;
         }
         desp += atributos[i].tam;
     }
+    return newBloque;
 }
 
 long CDiccionario::getApuntadorSig(void *bloque)
@@ -1058,15 +1054,15 @@ int CDiccionario::comparaBloque(void *bloque1, void *bloque2)
     switch (atributos[0].tipo)
     {
     case 1:
-        valor = strcmp(((char *)(bloque1 + sizeof(long))), ((char *)(bloque2 + sizeof(long))));
+        valor = strcmp(((char *)((char *)bloque1 + sizeof(long))), ((char *)((char *)bloque2 + sizeof(long))));
     case 2:
-        valor = *((int *)(bloque1 + sizeof(long))) - *((int *)(bloque2 + sizeof(long)));
+        valor = *((int *)((char *)bloque1 + sizeof(long))) - *((int *)((char *)bloque2 + sizeof(long)));
     case 3:
-        valor = *((float *)(bloque1 + sizeof(long))) - *((float *)(bloque2 + sizeof(long)));
+        valor = *((float *)((char *)bloque1 + sizeof(long))) - *((float *)((char *)bloque2 + sizeof(long)));
     case 4:
-        valor = *((double *)(bloque1 + sizeof(long))) - *((double *)(bloque2 + sizeof(long)));
+        valor = *((double *)((char *)bloque1 + sizeof(long))) - *((double *)((char *)bloque2 + sizeof(long)));
     case 5:
-        valor = *((long *)(bloque1 + sizeof(long))) - *((long *)(bloque2 + sizeof(long)));
+        valor = *((long *)((char *)bloque1 + sizeof(long))) - *((long *)((char *)bloque2 + sizeof(long)));
     }
     return valor;
 };
@@ -1086,7 +1082,7 @@ void CDiccionario::InsertaBloque(void *nuevoB, long posB)
         void *bloque = leeBloque(cabB);
         if (comparaBloque(nuevoB, bloque) < 0)
         {
-            *((long *)(nuevoB + 0)) = cabB;
+            *((long *)((char *)nuevoB + 0)) = cabB;
             reescribeBloque(posB, nuevoB);
             entactiva.data = posB;
             reescribeEntidad(entactiva, posentactiva);
@@ -1110,10 +1106,10 @@ void CDiccionario::InsertaBloque(void *nuevoB, long posB)
             } while (cabB != -1 && comparaBloque(nuevoB, bloque) > 0);
             if (cabB == -1)
             {
-                *((long *)(bAnte + 0)) = posB;
+                *((long *)((char *)bAnte + 0)) = posB;
                 reescribeBloque(posB, nuevoB);
             }
-            *((long *)(nuevoB + 0)) = cabB;
+            *((long *)((char *)nuevoB + 0)) = cabB;
             reescribeBloque(posB, nuevoB);
             free(bloque);
             free(bAnte);
@@ -1153,13 +1149,12 @@ long CDiccionario::escribeBloque(void *nuevo)
 
 void *CDiccionario::leeBloque(long dir)
 {
-    if (dir == 1)
+    if (dir == -1)
         return NULL;
     void *bloque = malloc(tambloque);
     if (bloque == NULL)
     {
         cout << "No hay memoria" << endl;
-        exit(1);
     }
     fseek(f, dir, SEEK_SET);
     fread(bloque, tambloque, 1, f);
@@ -1189,7 +1184,6 @@ long CDiccionario::buscaBloque(void *bloque)
             }
         }
     }
-
     return -1;
 }
 
@@ -1236,6 +1230,79 @@ long CDiccionario::eliminaBloque(void *claveB)
     }
     return -1;
 };
+
+void CDiccionario::consultaBloques()
+{
+    void *bloque;
+    long avance, cab = entactiva.data;
+    if (-1 != cab)
+    {
+        getAtributos();
+        int i;
+        for (i = 0; i < Natributos; i++)
+        {
+            avance = sizeof(long);
+            bloque = leeBloque(cab);
+            cout << atributos[i].nombre << endl;
+            switch (atributos[i].tipo)
+            {
+            case 1:
+                cout << "Cadena" << endl;
+                cadena cad;
+                cab = *(long *)((char *)bloque + 0);
+                do{
+                    strcpy(cad, (char *)bloque + avance);
+                    avance += sizeof(cad);
+                    cout << cad << '\t';
+                    cab = *(long *)((char *)bloque + avance);
+                }while (-1 != cab);
+                break;
+            case 2:
+                cout << "Entero" << endl;
+                cab = *(long *)((char *)bloque + 0);
+                do{
+                    int entero = *(int *)((char *)bloque + avance);
+                    cout << entero << '\t';
+                    avance += sizeof(int);
+                    cab = *(long *)((char *)bloque + avance);
+                }while (-1 != cab);
+                break;
+            case 3:
+                cout << "flotante" << endl;
+                cab = *(long *)((char *)bloque + 0);
+                do{
+                    float flotante = *(float *)((char *)bloque + avance);
+                    cout << flotante << '\t';
+                    avance += sizeof(float);
+                    cab = *(long *)((char *)bloque + avance);
+                }while (-1 != cab);
+                break;
+            case 4:
+                cout << "Doble" << endl;
+                cab = *(long *)((char *)bloque + 0);
+                do{
+                    double doble = *(double *)((char *)bloque + avance);
+                    cout << doble << '\t';
+                    avance += sizeof(double);
+                    cab = *(long *)((char *)bloque + avance);
+                }while (-1 != cab);
+                break;
+            case 5:
+                cout << "Largo" << endl;
+                cab = *(long *)((char *)bloque + 0);
+                do{
+                    long largo = *(long *)((char *)bloque + avance);
+                    cout << largo << '\t';
+                    avance += sizeof(long);
+                    cab = *(long *)((char *)bloque + avance);
+                }while (-1 != cab);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+}
 
 // EXTRAS
 void def()
