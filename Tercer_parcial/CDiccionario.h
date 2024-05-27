@@ -1272,77 +1272,42 @@ void CDiccionario::consultaBloques()
 {
     void *bloque;
     long avance, cab = entactiva.data;
-    if (-1 != cab)
+    if (cab == -1)
+        return;
+    while (cab != -1)
     {
-        getAtributos();
-        int i;
-        for (i = 0; i < Natributos; i++)
+        bloque = leeBloque(cab);
+        avance = sizeof(long);
+        for (int i = 0; i < Natributos; i++)
         {
-            avance = sizeof(long);
-            bloque = leeBloque(cab);
-            cout << atributos[i].nombre << endl;
             switch (atributos[i].tipo)
             {
             case 1:
-                cout << "Cadena" << endl;
-                cadena cad;
-                cab = *(long *)((char *)bloque + 0);
-                do
-                {
-                    strcpy(cad, (char *)bloque + avance);
-                    avance += sizeof(cad);
-                    cout << cad << '\t';
-                    cab = *(long *)((char *)bloque + avance);
-                } while (-1 != cab);
+                cout << atributos[i].nombre << ": " << (char *)((char *)bloque + avance) << endl;
+                avance += atributos[i].tam;
                 break;
             case 2:
-                cout << "Entero" << endl;
-                cab = *(long *)((char *)bloque + 0);
-                do
-                {
-                    int entero = *(int *)((char *)bloque + avance);
-                    cout << entero << '\t';
-                    avance += sizeof(int);
-                    cab = *(long *)((char *)bloque + avance);
-                } while (-1 != cab);
+                cout << atributos[i].nombre << ": " << *(int *)((char *)bloque + avance) << endl;
+                avance += sizeof(int);
                 break;
             case 3:
-                cout << "flotante" << endl;
-                cab = *(long *)((char *)bloque + 0);
-                do
-                {
-                    float flotante = *(float *)((char *)bloque + avance);
-                    cout << flotante << '\t';
-                    avance += sizeof(float);
-                    cab = *(long *)((char *)bloque + avance);
-                } while (-1 != cab);
+                cout << atributos[i].nombre << ": " << *(float *)((char *)bloque + avance) << endl;
+                avance += sizeof(float);
                 break;
             case 4:
-                cout << "Doble" << endl;
-                cab = *(long *)((char *)bloque + 0);
-                do
-                {
-                    double doble = *(double *)((char *)bloque + avance);
-                    cout << doble << '\t';
-                    avance += sizeof(double);
-                    cab = *(long *)((char *)bloque + avance);
-                } while (-1 != cab);
+                cout << atributos[i].nombre << ": " << *(double *)((char *)bloque + avance) << endl;
+                avance += sizeof(double);
                 break;
             case 5:
-                cout << "Largo" << endl;
-                cab = *(long *)((char *)bloque + 0);
-                do
-                {
-                    long largo = *(long *)((char *)bloque + avance);
-                    cout << largo << '\t';
-                    avance += sizeof(long);
-                    cab = *(long *)((char *)bloque + avance);
-                } while (-1 != cab);
+                cout << atributos[i].nombre << ": " << *(long *)((char *)bloque + avance) << endl;
+                avance += sizeof(long);
                 break;
             default:
                 break;
             }
         }
+        cab = getApuntadorSig(bloque);
+        free(bloque);
     }
 }
 
