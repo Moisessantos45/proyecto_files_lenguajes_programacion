@@ -113,6 +113,7 @@ public:
     void *leeBloque(long dir);
     long buscaBloque(void *bloque);
     void bajaSecuencia();
+    bool modificaBloque(void *bloque);
     long eliminaBloque(void *claveB);
     void consultaBloques();
 
@@ -296,8 +297,9 @@ void CDiccionario::menuDatos()
         case 1:
             if (getAtributos() == 1)
                 altaBloque();
-            else{
-                cout<<"Simon"<<endl;
+            else
+            {
+                cout << "Simon" << endl;
             }
             break;
         case 2:
@@ -1193,6 +1195,41 @@ void CDiccionario::bajaSecuencia()
     long bloque = eliminaBloque(claveB);
 }
 
+bool CDiccionario::modificaBloque(void *bloque)
+{
+    long cab = entactiva.data;
+    void *bloqueAnterior = NULL;
+    void *bloqueActual;
+    long cabAnterior;
+    if (cab == -1)
+        return false;
+    bloqueActual = leeBloque(cab);
+    if (comparaBloque(bloque, bloqueActual) == 0)
+    {
+        reescribeBloque(cab, bloque);
+        return true;
+    }
+    else
+    {
+        do
+        {
+            cabAnterior = cab;
+            bloqueAnterior = bloqueActual;
+            cab = getApuntadorSig(bloqueActual);
+            if (cab != -1)
+            {
+                bloqueActual = leeBloque(cab);
+            }
+        } while (cab != -1 && comparaBloque(bloque, bloqueActual) > 0);
+        if (comparaBloque(bloque, bloqueActual) == 0)
+        {
+            reescribeBloque(cab, bloque);
+            return true;
+        }
+    }
+    return false;
+}
+
 long CDiccionario::eliminaBloque(void *claveB)
 {
     long cab = entactiva.data;
@@ -1250,52 +1287,57 @@ void CDiccionario::consultaBloques()
                 cout << "Cadena" << endl;
                 cadena cad;
                 cab = *(long *)((char *)bloque + 0);
-                do{
+                do
+                {
                     strcpy(cad, (char *)bloque + avance);
                     avance += sizeof(cad);
                     cout << cad << '\t';
                     cab = *(long *)((char *)bloque + avance);
-                }while (-1 != cab);
+                } while (-1 != cab);
                 break;
             case 2:
                 cout << "Entero" << endl;
                 cab = *(long *)((char *)bloque + 0);
-                do{
+                do
+                {
                     int entero = *(int *)((char *)bloque + avance);
                     cout << entero << '\t';
                     avance += sizeof(int);
                     cab = *(long *)((char *)bloque + avance);
-                }while (-1 != cab);
+                } while (-1 != cab);
                 break;
             case 3:
                 cout << "flotante" << endl;
                 cab = *(long *)((char *)bloque + 0);
-                do{
+                do
+                {
                     float flotante = *(float *)((char *)bloque + avance);
                     cout << flotante << '\t';
                     avance += sizeof(float);
                     cab = *(long *)((char *)bloque + avance);
-                }while (-1 != cab);
+                } while (-1 != cab);
                 break;
             case 4:
                 cout << "Doble" << endl;
                 cab = *(long *)((char *)bloque + 0);
-                do{
+                do
+                {
                     double doble = *(double *)((char *)bloque + avance);
                     cout << doble << '\t';
                     avance += sizeof(double);
                     cab = *(long *)((char *)bloque + avance);
-                }while (-1 != cab);
+                } while (-1 != cab);
                 break;
             case 5:
                 cout << "Largo" << endl;
                 cab = *(long *)((char *)bloque + 0);
-                do{
+                do
+                {
                     long largo = *(long *)((char *)bloque + avance);
                     cout << largo << '\t';
                     avance += sizeof(long);
                     cab = *(long *)((char *)bloque + avance);
-                }while (-1 != cab);
+                } while (-1 != cab);
                 break;
             default:
                 break;
