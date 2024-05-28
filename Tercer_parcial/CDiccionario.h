@@ -1271,9 +1271,10 @@ long CDiccionario::eliminaBloque(void *claveB)
 void CDiccionario::consultaBloques()
 {
     void *bloque;
-    long avance, cab = entactiva.data;
+    long avance, j = 0, cab = entactiva.data;
     if (cab == -1)
         return;
+    getAtributos();
     while (cab != -1)
     {
         bloque = leeBloque(cab);
@@ -1283,7 +1284,11 @@ void CDiccionario::consultaBloques()
             switch (atributos[i].tipo)
             {
             case 1:
-                cout << atributos[i].nombre << ": " << (char *)((char *)bloque + avance) << endl;
+                while (*(char *)((char *)bloque + avance) != '\0' && j < atributos[i].tam)
+                {
+                    cout << atributos[i].nombre << ": " << *(char *)((char *)bloque + avance);
+                    j++;
+                }
                 avance += atributos[i].tam;
                 break;
             case 2:
@@ -1310,7 +1315,6 @@ void CDiccionario::consultaBloques()
         free(bloque);
     }
 }
-
 // EXTRAS
 void def()
 {
