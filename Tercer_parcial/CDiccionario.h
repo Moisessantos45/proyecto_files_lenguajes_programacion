@@ -778,15 +778,21 @@ Atributos CDiccionario::capturaAtributo()
     cout << "1. Cadena \n 2. Entero \n 3. Numero con decimal \n 4. Doble \n 5. Numero grande \n";
     cin >> nuevoAtributo.tipo;
 
-    if(nuevoAtributo.tipo >= 1 && nuevoAtributo.tipo <= 5) {
-        if(nuevoAtributo.tipo == 1) {
+    if (nuevoAtributo.tipo >= 1 && nuevoAtributo.tipo <= 5)
+    {
+        if (nuevoAtributo.tipo == 1)
+        {
             cout << "Tamanio de la cadena: ";
             cin >> nuevoAtributo.tam;
             nuevoAtributo.tam *= TAMANIOS[0];
-        } else {
+        }
+        else
+        {
             nuevoAtributo.tam = TAMANIOS[nuevoAtributo.tipo - 1];
         }
-    } else {
+    }
+    else
+    {
         def();
     }
 
@@ -870,21 +876,30 @@ void CDiccionario::modificaAtributo()
 {
     cadena atrName;
     pideNombreAtributo(&atrName);
-    if (buscaAtributo(atrName) != -1)
+    long posAtributo = buscaAtributo(atrName);
+
+    if (posAtributo != -1)
     {
-        cambiaKP();
+        Atributos atrActual = leeAtributo(posAtributo);
+
+        // Captura del nuevo atributo
         Atributos nuevoAtr = capturaAtributo();
-        if (buscaAtributo(nuevoAtr.nombre) == -1)
+        nuevoAtr.sig = atrActual.sig; // Mantener el enlace de lista
+
+        if (strcmpi(atrActual.nombre, nuevoAtr.nombre) != 0 && buscaAtributo(nuevoAtr.nombre) != -1)
         {
-            long pos = eliminaAtributo(atrName);
-            reescribeAtributo(nuevoAtr, pos);
-            insertaAtributo(nuevoAtr, pos);
-        } // ERROR
-        else
             cout << "Ese atributo ya existe" << endl;
+        }
+        else
+        {
+            reescribeAtributo(nuevoAtr, posAtributo);
+            cout << "Atributo modificado exitosamente." << endl;
+        }
     }
     else
+    {
         cout << "El atributo " << atrName << " no existe" << endl;
+    }
 }
 
 // Pide el nombre de un atributo y lo guarda en la variable name
