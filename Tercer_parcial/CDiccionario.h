@@ -53,6 +53,7 @@ private:
     long tambloque;
     int Natributos;
     Atributos atributos[50];
+    Atributos atributoSeleccionado;
 
 public:
     CDiccionario();
@@ -634,31 +635,36 @@ int CDiccionario::pedirEntidad()
 long CDiccionario::eliminaAtributo(cadena nombre)
 {
     long cab = entactiva.atr;
-    Atributos atributoAnterior;
-    long cabAnterior;
-    Atributos atributoActual = leeAtributo(entactiva.atr);
+    if (cab == -1)
+        return -1; // No hay atributos
+
+    Atributos atributoActual = leeAtributo(cab);
     if (strcmpi(atributoActual.nombre, nombre) == 0)
     {
         entactiva.atr = atributoActual.sig;
         reescribeEntidad(entactiva, posentactiva);
+        return cab;
     }
-    else
-    {
-        do
-        {
-            cabAnterior = cab;
-            atributoAnterior = atributoActual;
-            cab = atributoActual.sig;
-            if (cab != -1)
-            {
-                atributoActual = leeAtributo(cab);
-            }
-        } while (cab != -1 && strcmpi(atributoActual.nombre, nombre) < 0);
 
-        atributoAnterior.sig = atributoActual.sig;
-        reescribeAtributo(atributoAnterior, cabAnterior);
+    long cabAnterior = cab;
+    Atributos atributoAnterior = atributoActual;
+
+    cab = atributoActual.sig;
+    while (cab != -1)
+    {
+        atributoActual = leeAtributo(cab);
+        if (strcmpi(atributoActual.nombre, nombre) == 0)
+        {
+            atributoAnterior.sig = atributoActual.sig;
+            reescribeAtributo(atributoAnterior, cabAnterior);
+            return cab;
+        }
+        cabAnterior = cab;
+        atributoAnterior = atributoActual;
+        cab = atributoActual.sig;
     }
-    return cab;
+
+    return -1;
 }
 
 // Se encarga de eliminar un atributo de una entidad. Se pide el nombre del atributo a eliminar y se llama a la función eliminaAtributo() para realizar la eliminación.
@@ -782,9 +788,9 @@ Atributos CDiccionario::capturaAtributo()
     {
         if (nuevoAtributo.tipo == 1)
         {
-            cout << "Tamanio de la cadena: ";
+            cout << "Tamano de la cadena: ";
             cin >> nuevoAtributo.tam;
-            nuevoAtributo.tam *= TAMANIOS[0];
+            nuevoAtributo.tam *= sizeof(char);
         }
         else
         {
@@ -796,9 +802,9 @@ Atributos CDiccionario::capturaAtributo()
         def();
     }
 
-    if (clavePrimaria() == -1)
+    if (atributoSeleccionado.isKp == 's')
     {
-        cout << "Es llave primaria? \n";
+        cout << "El atributo es actualmente una clave primaria. Desea cambiarlo? \n";
         do
         {
             cout << "s-Si \n n-No \n";
@@ -809,8 +815,23 @@ Atributos CDiccionario::capturaAtributo()
     }
     else
     {
-        nuevoAtributo.isKp = 'n';
+        if (clavePrimaria() == -1)
+        {
+            cout << "Es llave primaria? \n";
+            do
+            {
+                cout << "s-Si \n n-No \n";
+                cin >> nuevoAtributo.isKp;
+                if (nuevoAtributo.isKp != 's' && nuevoAtributo.isKp != 'n')
+                    def();
+            } while (nuevoAtributo.isKp != 's' && nuevoAtributo.isKp != 'n');
+        }
+        else
+        {
+            nuevoAtributo.isKp = 'n';
+        }
     }
+
     nuevoAtributo.sig = -1;
     return nuevoAtributo;
 }
@@ -864,7 +885,7 @@ long CDiccionario::buscaAtributo(cadena name)
             atr = leeAtributo(cab);
             if (strcmpi(atr.nombre, name) == 0)
                 return cab;
-            else if (strcmpi(atr.nombre, name) > 0)
+            else if (strcmpi(atr.nombre, name) > 0 && atr.isKp != 's')
                 break;
             cab = atr.sig;
         } while (cab != -1 && strcmpi(atr.nombre, name) != 0);
@@ -880,13 +901,13 @@ void CDiccionario::modificaAtributo()
 
     if (posAtributo != -1)
     {
-        Atributos atrActual = leeAtributo(posAtributo);
+        atributoSeleccionado = leeAtributo(posAtributo);
 
-        // Captura del nuevo atributo
         Atributos nuevoAtr = capturaAtributo();
-        nuevoAtr.sig = atrActual.sig; // Mantener el enlace de lista
 
-        if (strcmpi(atrActual.nombre, nuevoAtr.nombre) != 0 && buscaAtributo(nuevoAtr.nombre) != -1)
+        nuevoAtr.sig = atributoSeleccionado.sig;
+
+        if (strcmpi(atributoSeleccionado.nombre, nuevoAtr.nombre) != 0 && buscaAtributo(nuevoAtr.nombre) != -1)
         {
             cout << "Ese atributo ya existe" << endl;
         }
